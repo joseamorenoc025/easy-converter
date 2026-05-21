@@ -1,0 +1,193 @@
+🚨 1. Problemas Críticos (Te fallarán en producción)
+A. El infierno de COM en Multihilo (DOCX -> PDF)
+Estás usando docx2pdf bajo el capó, el cual usa win32com. Microsoft Word COM es STA (Single-Threaded Apartment). Esto significa que las llamadas a Word deben ejecutarse en el hilo principal o en un hilo configurado específicamente, y no se pueden hacer llamadas concurrentes.
+
+El problema actual: Tu ConversionQueue lanza hilos demonio. Si el usuario arrastra 5 archivos .docx, intentarás abrir 5 instancias de Word en paralelo en segundo plano. Esto bloqueará la aplicación o lanzará errores COM error 0x8001010E (RPC_E_WRONG_THREAD).
+La solución:
+Inicializar COM en el worker: Llama a pythoncom.CoInitialize() al inicio del hilo y pythoncom.CoUninitialize() al final.
+Procesamiento secuencial para Word: Solo puedes tener una conversión de Word a la vez. Modifica tu cola para que las conversiones word2pdf se encolen en un hilo secuencial dedicado, o usa un ThreadPoolExecutor(max_workers=1) exclusivo para COM.
+B. Fugas de memoria en WordChecker
+En tu código actual: word = win32com.client.Dispatch("Word.Application")
+word.Quit()
+return True 
+Si hay un error antes del .Quit(), dejas una instancia zombie de Word en segundo plano (puedes verlo en el Administrador de Tareas). Además, Quit() a veces no libera el objeto COM correctamente.
+
+La solución: Usar un contexto seguro o forzar la liberación:
+import pythoncom
+import win32com.client
+
+@staticmethod
+def is_word_installed() -> bool:
+    if sys.platform != "win32":
+        return False
+    try:
+        pythoncom.CoInitialize()
+        word = win32com.client.Dispatch("Word.Application")
+        word.Visible = False
+        word.Quit()
+        import gc
+        gc.collect() # Forzar limpieza de COM
+        return True
+    except Exception:
+        return False
+    finally:
+        pythoncom.CoUninitialize()
+
+        C. Race Conditions en queue_manager.py
+Usas self._lock en add_item y clear_completed, pero no en _process_queue cuando modificas item.status, item.progress, etc. Si la UI lee self.items mientras el hilo worker lo modifica, tkinter crasheará.
+
+La solución: Proteger cualquier escritura/lectura de la lista compartida:
+def _process_queue(self):
+    while not self.queue.empty():
+        item = self.queue.get()
+        with self._lock: # <--- Añadir esto
+            item.status = "running"
+            item.message = "Iniciando..."
+        
+        # ... lógica ...
+        
+        with self._lock: # <--- Añadir esto
+            if success: item.status = "success" 
+            else: item.status = "failed"
+            🔧 2. Mejoras Arquitectónicas de Alto Nivel
+A. Progreso Real en PDF -> DOCX
+Tu código simula el progreso (progress_tracker.update(20, ...)) pero pdf2docx soporta un callback nativo para saber exactamente qué página está procesando.
+Modifica tu converter.py así:
+
+python
+
+@staticmethod
+def pdf_to_docx(pdf_path, output_path=None, progress_tracker=None):
+    # ... código previo ...
+    cv = Converter(str(pdf_path))
+    
+    # Callback nativo de pdf2docx
+    def on_page_update(page_num, total_pages):
+        if progress_tracker:
+            percent = int((page_num / total_pages) * 100)
+            progress_tracker.update(percent, f"Convirtiendo página {page_num}/{total_pages}")
+    
+    cv.convert(str(docx_path), start=0, end=None, callbacks=[on_page_update])
+    cv.close()
+
+    B. Decorador de Reintentos Exponenciales Real
+Tu decorador actual en error_handler.py reintiene al instante, lo cual es inútil para errores de red o bloqueos de archivos. Falta el time.sleep exponencial.
+import time
+
+@staticmethod
+def get_retry_decorator(max_attempts=3, base_delay=1):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            attempts = 0
+            while attempts < max_attempts:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    attempts += 1
+                    if attempts == max_attempts:
+                        raise
+                    delay = base_delay * (2 ** (attempts - 1))
+                    time.sleep(delay)
+        return wrapper
+    return decorator
+    🛠️ 3. El Reto PyInstaller (Tu prioridad Alta)
+Empaquetar customtkinter + tkinterdnd2 + win32com es una pesadilla si no sabes los trucos. Cuando llegues a esto, usa este archivo base build/easy_converter.spec:
+# -*- mode: python ; coding: utf-8 -*-
+import sys
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+
+block_cipher = None
+
+# Recopilar assets de customtkinter (temas, imágenes)
+datas = collect_data_files('customtkinter')
+
+# Recopilar submódulos ocultos que PyInstaller no detecta
+hiddenimports = [
+    'win32com', 
+    'win32com.client', 
+    'pythoncom',
+    'pywintypes',
+    'tkinterdnd2',
+    'pkg_resources',
+    'appdirs'
+]
+
+a = Analysis(
+    ['src/main.py'],
+    pathex=[],
+    binaries=[],
+    datas=datas,
+    hiddenimports=hiddenimports,
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
+    noarchive=False,
+)
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    [],
+    name='EasyConverter',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
+    console=False, # Importante: oculta la ventana negra de CMD
+    disable_windowed_traceback=False,
+    icon='src/assets/icon.ico' # Si añades un ícono
+)
+💡 4. UX / UI Detalles Finales
+En main_window.py, usas re.findall(r'{(.*?)}|(\S+)', data) para el Drag & Drop. Esto es genial porque tkinterdnd2 en Windows envía rutas con espacios entre llaves {C:/Mi Carpeta/file.pdf}. Sin embargo, a veces también añade llaves vacías o basura.
+Una limpieza más robusta sería:
+def handle_drop(self, event):
+    data = event.data
+    # Limpia llaves y divide correctamente
+    paths = re.findall(r'{([^}]+)}|(\S+)', data)
+    file_paths = [Path(p[0] if p[0] else p[1]) for p in paths]
+    
+    for path in file_paths:
+        if path.exists(): # Verificar que el path limpiado existe
+            self.process_selected_file(str(path))
+
+            🛠️ 2. Mejoras de Experiencia de Usuario (UX)
+D. Integración con el Explorador de Windows (Context Menu)
+Para un conversor, lo más rápido es hacer clic derecho sobre un archivo.
+
+Cómo funciona: En la instalación (o con un botón en la configuración), escribes en el registro de Windows una entrada: "Convertir a Word" -> "C:\ruta\a\EasyConverter.exe" --pdf2docx "%1".
+Implementación: Modificas tu main.py para aceptar argumentos (sys.argv). Si recibe un archivo, lo añade a la cola automáticamente y abre la ventana. Si no recibe argumentos, abre la app vacía.
+E. Previsualización Rápida (Quick Preview)
+A veces conviertes un PDF a Word para ver si se puede editar, pero el resultado es desastroso.
+
+Cómo funciona: Añadir un pequeño panel en la parte inferior o lateral de la UI. Usando PyMuPDF, extraes la primera página del PDF y la muestras como imagen antes de convertir. Así el usuario sabe si vale la pena convertirlo.
+F. "Auto-Detección de Modo" como predeterminado
+En tu UI tienes un selector manual: "PDF a Word" / "Word a PDF".
+
+Mejora: Por defecto, la app debería estar en "Auto". Si arrastro un .pdf, va a Word. Si arrastro un .docx, va a PDF. Solo necesitas un toggle para invertir la salida si el usuario quiere hacer algo inusual.
+⚙️ 3. Mejoras de Motor y Calidad
+G. Fallback para DOCX -> PDF sin Word (LibreOffice Headless)
+Tu mayor limitación actual es requerir MS Word. Muchos usuarios tienen LibreOffice.
+
+Cómo funciona: Si WordChecker falla, busca en el registro si está instalado LibreOffice. Si lo está, usa su ejecutable en modo headless (soffice.exe --headless --convert-to pdf).
+Implementación: Es mucho más estable y rápido que COM automation, y no requiere interfaz gráfica. ¡Te carga los PDFs en un 50% menos de tiempo!
+H. Preservación de Metadatos y Seguridad
+Cuando conviertes de PDF a DOCX, los metadatos (autor, fecha de creación) se pierden, y si el PDF estaba protegido con contraseña, pdf2docx crashea.
+
+Mejora 1: Antes de convertir, usa PyMuPDF para comprobar si el PDF está cifrado (doc.is_encrypted). Si lo está, pide la contraseña por UI antes de encolarlo.
+Mejora 2: Extraer metadatos del PDF original y, usando python-docx, inyectarlos en el archivo final de Word resultante.
+I. Post-Procesamiento de Limpieza de Word (Sanitizer)
+El mayor quebradero de cabeza al pasar de PDF a Word son los saltos de línea innecesarios y las fuentes raras.
+
+Cómo funciona: Añade una regla de Workflow llamada "Limpiar Formato Word". Usando python-docx, recorres los párrafos del DOCX generado: eliminas párrafos vacíos, unes oraciones cortadas por saltos de línea manuales (\n), y unificas la fuente (ej. a Arial 11).
+Impacto: Esto vale oro. La gente convierte PDFs a Word para editarlos, y si les das un documento limpio sin saltos de línea raros, te recomendarán por encima de cualquier conversor web.
