@@ -43,5 +43,14 @@ python src/main.py
 - [watchdog](https://github.com/gorakhargosh/watchdog): Monitoreo de carpetas en tiempo real.
 - [customtkinter](https://github.com/TomSchimansky/CustomTkinter): Interfaz gráfica.
 
+## 📁 Estructura del Proyecto
+- `src/`: Código fuente de la aplicación.
+  - `core/`: Lógica de conversión, flujos y monitoreo.
+  - `ui/`: Interfaz gráfica y componentes.
+  - `utils/`: Utilidades de configuración y herramientas PDF/Word.
+- `assets/`: Recursos visuales e iconos.
+- `build/`: Configuraciones de compilación y hooks de PyInstaller.
+- `tests/`: Pruebas unitarias y de integración.
+
 ---
 *Desarrollado con ❤️ por Gemini CLI*
