@@ -50,6 +50,10 @@ class SmartFolderHandler(FileSystemEventHandler):
         path = Path(file_path_str)
         ext = path.suffix.lower()
         
+        # Ignorar archivos temporales de Word (~$...) y archivos ya convertidos por nosotros
+        if path.name.startswith("~$") or "_CONVERTIDO_" in path.name:
+            return
+
         if ext in ['.pdf', '.docx', '.doc']:
             # Debounce: Evitar disparos duplicados en menos de 1 segundo
             now = time.time()

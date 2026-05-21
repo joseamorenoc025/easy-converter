@@ -25,13 +25,13 @@ hidden_imports += collect_submodules('customtkinter')
 
 # Recopilar datos de tkinterdnd2 y otras librerías
 datas = [
-    ('assets', 'assets'),
+    ('../assets', 'assets'),
 ]
 datas += collect_data_files('tkinterdnd2')
 datas += collect_data_files('customtkinter')
 
 a = Analysis(
-    ['src/main.py'],
+    ['../src/main.py'],
     pathex=[os.getcwd(), base_path],
     binaries=[],
     datas=datas,

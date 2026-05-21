@@ -70,18 +70,22 @@ class ErrorHandler:
         return f"Ocurrió un error inesperado: {str(error)}"
 
     @staticmethod
-    def get_retry_decorator(max_attempts=3):
-        """Decorador para reintentos exponenciales (Placeholder para lógica compleja)"""
+    def get_retry_decorator(max_attempts=3, base_delay=1):
+        """Decorador para reintentos exponenciales real"""
+        import time
         def decorator(func):
             def wrapper(*args, **kwargs):
                 attempts = 0
                 while attempts < max_attempts:
                     try:
                         return func(*args, **kwargs)
-                    except Exception:
+                    except Exception as e:
                         attempts += 1
                         if attempts == max_attempts:
                             raise
+                        delay = base_delay * (2 ** (attempts - 1))
+                        time.sleep(delay)
                 return None
             return wrapper
         return decorator
+

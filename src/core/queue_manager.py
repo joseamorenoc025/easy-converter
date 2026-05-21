@@ -43,8 +43,10 @@ class ConversionQueue:
     def _process_queue(self):
         while not self.queue.empty():
             item = self.queue.get()
-            item.status = "running"
-            item.message = "Iniciando..."
+            
+            with self._lock:
+                item.status = "running"
+                item.message = "Iniciando..."
             
             if self.on_queue_update:
                 self.on_queue_update()
@@ -52,12 +54,14 @@ class ConversionQueue:
             try:
                 # La worker_func debe manejar el progreso del item
                 self.worker_func(item)
-                item.status = "success"
-                item.progress = 100
-                item.message = "Completado"
+                with self._lock:
+                    item.status = "success"
+                    item.progress = 100
+                    item.message = "Completado"
             except Exception as e:
-                item.status = "failed"
-                item.message = f"Error: {str(e)}"
+                with self._lock:
+                    item.status = "failed"
+                    item.message = f"Error: {str(e)}"
             
             if self.on_queue_update:
                 self.on_queue_update()

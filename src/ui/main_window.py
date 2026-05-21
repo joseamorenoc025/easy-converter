@@ -97,6 +97,9 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         if self.config_manager.get("open_folder_on_finish"): self.check_open.select()
         self.check_open.pack(pady=20, padx=20, anchor="w")
 
+        self.btn_context_menu = customtkinter.CTkButton(self.sidebar, text="Añadir a Menú Contextual", command=self.register_context_menu, height=30, fg_color="gray30")
+        self.btn_context_menu.pack(pady=10, padx=20, side="bottom")
+
         # Main Content
         self.main_frame = customtkinter.CTkFrame(self, fg_color="transparent")
         self.main_frame.pack(side="right", fill="both", expand=True, padx=20)
@@ -110,8 +113,15 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         # --- TAB: Conversión Manual ---
         self.manual_tab = self.tabview.tab("Conversión Manual")
 
+        # Layout para Manual Tab: Izquierda (Controles) | Derecha (Preview)
+        self.manual_content = customtkinter.CTkFrame(self.manual_tab, fg_color="transparent")
+        self.manual_content.pack(fill="both", expand=True)
+
+        self.left_manual = customtkinter.CTkFrame(self.manual_content, fg_color="transparent")
+        self.left_manual.pack(side="left", fill="both", expand=True, padx=(0, 10))
+
         # Selector de modo
-        self.mode_frame = customtkinter.CTkFrame(self.manual_tab, fg_color="transparent")
+        self.mode_frame = customtkinter.CTkFrame(self.left_manual, fg_color="transparent")
         self.mode_frame.pack(pady=10)
 
         self.btn_pdf2word = customtkinter.CTkButton(self.mode_frame, text="PDF a Word", command=lambda: self.set_mode("pdf2word"), width=120)
@@ -120,7 +130,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.btn_word2pdf.grid(row=0, column=1, padx=10)
 
         # Drop Zone
-        self.drop_frame = customtkinter.CTkFrame(self.manual_tab, height=100, corner_radius=15)
+        self.drop_frame = customtkinter.CTkFrame(self.left_manual, height=100, corner_radius=15)
         self.drop_frame.pack(pady=10, fill="x")
         self.drop_frame.pack_propagate(False)
 
@@ -131,8 +141,19 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.drop_frame.drop_target_register(DND_FILES)
         self.drop_frame.dnd_bind('<<Drop>>', self.handle_drop)
 
+        # Preview Panel (Nuevo)
+        self.preview_frame = customtkinter.CTkFrame(self.manual_content, width=200, corner_radius=10)
+        self.preview_frame.pack(side="right", fill="y", pady=10)
+        self.preview_frame.pack_propagate(False)
+
+        self.preview_title = customtkinter.CTkLabel(self.preview_frame, text="Vista Previa", font=customtkinter.CTkFont(size=12, weight="bold"))
+        self.preview_title.pack(pady=5)
+
+        self.preview_image_label = customtkinter.CTkLabel(self.preview_frame, text="Sin selección")
+        self.preview_image_label.pack(expand=True, padx=10, pady=10)
+
         # Queue (ahora dentro de la tab manual para mejor enfoque)
-        self.scroll_frame = customtkinter.CTkScrollableFrame(self.manual_tab, height=250)
+        self.scroll_frame = customtkinter.CTkScrollableFrame(self.left_manual, height=250)
         self.scroll_frame.pack(pady=10, fill="both", expand=True)
         self.item_widgets = {}
 
@@ -173,17 +194,52 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
     def handle_drop(self, event):
         data = event.data
         import re
-        paths = re.findall(r'\{(.*?)\}|(\S+)', data)
-        file_paths = [p[0] if p[0] else p[1] for p in paths]
+        # Limpia llaves y divide correctamente (soporta espacios en rutas de Windows)
+        paths = re.findall(r'\{([^}]+)\}|(\S+)', data)
+        file_paths = [Path(p[0] if p[0] else p[1]) for p in paths]
+        
         for path in file_paths:
-            self.process_selected_file(path)
+            if path.exists():
+                self.process_selected_file(str(path))
 
     def process_selected_file(self, file_path):
         path = Path(file_path)
         ext = path.suffix.lower()
-        mode = 'pdf2word' if ext == '.pdf' else 'word2pdf' if ext in ['.docx', '.doc'] else None
+        
+        # Actualizar vista previa si es PDF
+        if ext == '.pdf':
+            self.update_preview(path)
+        
+        # Lógica de Auto-Detección mejorada
+        mode = None
+        if ext == '.pdf':
+            mode = 'pdf2word'
+        elif ext in ['.docx', '.doc']:
+            mode = 'word2pdf'
+            
         if mode:
             self.queue_manager.add_item(path, mode)
+
+    def update_preview(self, pdf_path):
+        import fitz
+        from PIL import Image
+        try:
+            doc = fitz.open(str(pdf_path))
+            page = doc.load_page(0)
+            pix = page.get_pixmap(matrix=fitz.Matrix(0.5, 0.5)) # Baja resolución para preview rápida
+            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            
+            # Ajustar al tamaño del panel
+            preview_width = 180
+            aspect = img.height / img.width
+            preview_height = int(preview_width * aspect)
+            
+            ctk_img = customtkinter.CTkImage(light_image=img, dark_image=img, size=(preview_width, preview_height))
+            self.preview_image_label.configure(image=ctk_img, text="")
+            doc.close()
+        except Exception as e:
+            self.preview_image_label.configure(image=None, text=f"Error en preview")
+            print(f"Error generando preview: {e}")
 
     def set_mode(self, mode):
         self.conversion_mode = mode
@@ -220,6 +276,14 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
                     self.path_manager.open_in_explorer(Path(item.result_path))
         except Exception as e:
             raise e
+
+    def register_context_menu(self):
+        from utils.context_menu import add_context_menu
+        try:
+            add_context_menu()
+            messagebox.showinfo("Éxito", "Menú contextual añadido correctamente.\nAhora puedes hacer clic derecho en archivos PDF/DOCX.")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo añadir al registro: {e}")
 
     def update_queue_ui(self):
         self.after(0, self._render_queue)

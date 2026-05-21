@@ -11,6 +11,7 @@ class RuleType(Enum):
     MOVE = "move"
     COPY = "copy"
     NOTIFY = "notify"
+    SANITIZE = "sanitize"
 
 @dataclass
 class WorkflowRule:
@@ -107,5 +108,38 @@ class WorkflowManager:
             dest_path = dest_dir / file_path.name
             shutil.copy2(str(file_path), str(dest_path))
             return file_path # Retornamos el original para seguir aplicando reglas sobre él
+
+        elif rule.type == RuleType.SANITIZE:
+            if file_path.suffix.lower() != '.docx':
+                return file_path
+            
+            try:
+                from docx import Document
+                from docx.shared import Pt
+                
+                doc = Document(file_path)
+                font_name = rule.params.get("font", "Arial")
+                font_size = rule.params.get("size", 11)
+                
+                for p in doc.paragraphs:
+                    # Unir líneas cortadas por saltos manuales
+                    if "\n" in p.text:
+                        p.text = p.text.replace("\n", " ")
+                    
+                    # Unificar formato de fuente
+                    for run in p.runs:
+                        run.font.name = font_name
+                        run.font.size = Pt(font_size)
+                
+                # Eliminar párrafos vacíos
+                for p in list(doc.paragraphs):
+                    if not p.text.strip():
+                        p._element.getparent().remove(p._element)
+                
+                doc.save(file_path)
+            except Exception as e:
+                print(f"Error sanitizando documento: {e}")
+            
+            return file_path
 
         return file_path

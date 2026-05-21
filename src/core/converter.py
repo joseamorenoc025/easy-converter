@@ -46,10 +46,13 @@ class EasyConverter:
             if progress_tracker:
                 progress_tracker.update(10, f"Iniciando conversión de {total_pages} páginas...")
             
-            cv.convert(str(docx_path), start=0, end=None)
-            
-            if progress_tracker:
-                progress_tracker.update(90, "Finalizando reconstrucción de estilos...")
+            # Callback nativo de pdf2docx
+            def on_page_update(page_num, total_pages_cb):
+                if progress_tracker:
+                    percent = int((page_num / total_pages_cb) * 100)
+                    progress_tracker.update(percent, f"Convirtiendo página {page_num}/{total_pages_cb}")
+
+            cv.convert(str(docx_path), start=0, end=None, callbacks=[on_page_update])
             
             cv.close()
             
@@ -109,5 +112,7 @@ class EasyConverter:
                 progress_tracker.error(e)
             raise e
         finally:
+            import gc
+            gc.collect()
             # Liberar recursos COM para evitar fugas de memoria o bloqueos de hilos
             pythoncom.CoUninitialize()
