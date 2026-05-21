@@ -1,0 +1,4 @@
+customtkinter
+pdf2docx
+docx2pdf
+tkinterdnd2
