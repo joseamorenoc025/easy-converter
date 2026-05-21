@@ -1,0 +1,20 @@
+# Core
+pdf2docx>=0.5.8
+docx2pdf>=0.1.8
+PyMuPDF>=1.24.0          # Para metadatos y OCR
+pytesseract>=0.3.10      # OCR opcional
+pillow>=10.0.0           # Imágenes para OCR
+watchdog>=3.0.0          # Para monitoreo de carpetas
+
+# UI
+customtkinter>=5.2.0
+tkinterdnd2>=0.4.2
+ttkbootstrap>=1.10.1     # Opcional: temas modernos
+
+# Utilidades
+psutil>=5.9.0            # Monitoreo de recursos
+appdirs>=1.4.4           # Rutas de configuración multi-plataforma
+pywin32; sys_platform == 'win32'
+
+# Build
+pyinstaller>=6.0.0
