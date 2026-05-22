@@ -19,6 +19,16 @@ hidden_imports = [
     'win32com.client',
     'pythoncom',
     'fitz',  # PyMuPDF
+    # Módulos locales del proyecto
+    'ui',
+    'ui.main_window',
+    'core',
+    'core.converter',
+    'core.queue_manager',
+    'core.workflow',
+    'utils',
+    'utils.context_menu',
+    'utils.word_checker',
 ]
 hidden_imports += collect_submodules('pdf2docx')
 hidden_imports += collect_submodules('customtkinter')
@@ -32,14 +42,29 @@ datas += collect_data_files('customtkinter')
 
 a = Analysis(
     ['../src/main.py'],
-    pathex=[os.getcwd(), base_path],
+    pathex=[base_path, os.getcwd()],
     binaries=[],
     datas=datas,
     hiddenimports=hidden_imports,
     hookspath=['build/hooks'],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['notebook', 'matplotlib', 'numpy'],
+    excludes=[
+        # Librerías científicas/ML no requeridas por Easy Converter
+        'torch', 'torchvision', 'torchaudio',
+        'scipy', 'sklearn', 'sklearn.utils',
+        'pandas', 'numpy', 'matplotlib',
+        'numba', 'llvmlite',
+        'pyarrow', 'fsspec',
+        'notebook', 'IPython', 'ipykernel',
+        'tensorflow', 'keras',
+        'cv2', 'skimage',
+        'lxml', 'bs4', 'html5lib',
+        'sqlalchemy', 'psycopg2',
+        'cryptography', 'nacl',
+        'docutils', 'sphinx',
+        'pygments',
+    ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
