@@ -13,27 +13,26 @@ class WordChecker:
             
         import pythoncom
         import win32com.client
-            
-        already_initialized = False
+        
+        com_was_init = False
         try:
             try:
                 pythoncom.CoInitialize()
             except pythoncom.com_error:
-                already_initialized = True
-                
+                com_was_init = True
+            
             # Intentar crear una instancia de Word sin mostrar la ventana
             word = win32com.client.Dispatch("Word.Application")
             word.Visible = False
             word.Quit()
-            
-            # Limpieza explícita
-            word = None
+            # Forzar recolección de basura para limpiar cualquier residuo
+            del word
             gc.collect()
             return True
         except Exception:
             return False
         finally:
-            if not already_initialized:
+            if not com_was_init:
                 try:
                     pythoncom.CoUninitialize()
                 except Exception:

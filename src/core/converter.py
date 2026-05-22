@@ -70,8 +70,12 @@ class EasyConverter:
         """
         Convierte un archivo DOCX a PDF manejando el contexto COM de Windows y fases de progreso.
         """
-        # Inicialización obligatoria de COM para entornos Multithreading
-        pythoncom.CoInitialize()
+        # Inicialización de COM — verificar estado para evitar crash en threads donde ya está inicializado
+        com_was_init = False
+        try:
+            pythoncom.CoInitialize()
+        except pythoncom.com_error:
+            com_was_init = True
         try:
             docx_path_obj = Path(docx_path)
             if not docx_path_obj.exists():
@@ -95,13 +99,17 @@ class EasyConverter:
                 progress_tracker.update(40, "Fase 2/3: Renderizando con Microsoft Word...")
 
             # Conversión real
+            word = None
+            doc = None
             if docx_path_obj.suffix.lower() == '.doc':
                 # docx2pdf no soporta .doc, usamos COM directo
                 import win32com.client
                 word = win32com.client.Dispatch("Word.Application")
+                word.Visible = False
                 doc = word.Documents.Open(str(docx_path_obj))
                 doc.SaveAs(str(pdf_path), FileFormat=17) # 17 = wdFormatPDF
                 doc.Close()
+                doc = None
             else:
                 word_to_pdf_conv(str(docx_path_obj), str(pdf_path))
             
@@ -117,7 +125,24 @@ class EasyConverter:
                 progress_tracker.error(e)
             raise e
         finally:
+            # Cerrar Word correctamente para evitar WINWORD.EXE zombies
+            if doc is not None:
+                try:
+                    doc.Close()
+                except Exception:
+                    pass
+                doc = None
+            if word is not None:
+                try:
+                    word.Quit()
+                except Exception:
+                    pass
+                word = None
             import gc
             gc.collect()
-            # Liberar recursos COM para evitar fugas de memoria o bloqueos de hilos
-            pythoncom.CoUninitialize()
+            # Solo liberar COM si no nosotros lo inicializamos
+            if not com_was_init:
+                try:
+                    pythoncom.CoUninitialize()
+                except Exception:
+                    pass

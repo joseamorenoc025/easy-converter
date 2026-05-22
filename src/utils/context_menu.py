@@ -27,22 +27,27 @@ def add_context_menu():
         ".doc": ("Convertir a PDF", f'{exe_path} --word2pdf "%1"')
     }
 
-    try:
-        for ext, (label, cmd) in commands.items():
-            # El registro de Windows usa clases para las extensiones
-            # Ejemplo: HKEY_CLASSES_ROOT\.pdf -> (Default) = pdfxml (o similar)
-            # Para simplificar, lo añadiremos a SystemFileAssociations
-            key_path = f"Software\\Classes\\SystemFileAssociations\\{ext}\\shell\\EasyConverter"
-            
-            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
+    failed = []
+    succeeded = []
+    for ext, (label, cmd) in commands.items():
+        ext_key_path = f"Software\\Classes\\SystemFileAssociations\\{ext}\\shell\\EasyConverter"
+        try:
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, ext_key_path) as key:
                 winreg.SetValueEx(key, "", 0, winreg.REG_SZ, label)
-                
-            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, f"{key_path}\\command") as key:
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, f"{ext_key_path}\\command") as key:
                 winreg.SetValueEx(key, "", 0, winreg.REG_SZ, cmd)
-        
-        print("Menú contextual añadido con éxito.")
-    except Exception as e:
-        print(f"Error al añadir menú contextual: {e}")
+            succeeded.append(ext)
+        except Exception as e:
+            failed.append((ext, str(e)))
+    
+    if succeeded and not failed:
+        print(f"Menú contextual añadido: {', '.join(succeeded)}.")
+    elif succeeded and failed:
+        print(f"Partial success — registradas: {', '.join(succeeded)}.")
+        for ext, err in failed:
+            print(f"  {ext}: {err}")
+    else:
+        print(f"Error al añadir menú contextual.")
 
 def remove_context_menu():
     """Elimina las entradas del registro."""

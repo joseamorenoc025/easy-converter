@@ -95,6 +95,9 @@ class WorkflowManager:
             date_str = datetime.now().strftime("%Y%m%d_%H%M%S")
             new_name = pattern.replace("{name}", file_path.stem).replace("{date}", date_str) + file_path.suffix
             new_path = file_path.parent / new_name
+            if new_path.exists():
+                logger.warning(f"Conflicto de nombre: {new_path.name} ya existe. Saltando renombrado.")
+                return file_path
             os.rename(file_path, new_path)
             return new_path
 
