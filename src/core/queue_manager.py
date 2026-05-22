@@ -28,11 +28,14 @@ class ConversionQueue:
             item = QueueItem(file_path=file_path, mode=mode, workflow_profile=workflow_profile)
             self.items.append(item)
             self.queue.put(item)
+            should_start = not self.is_running
+            if should_start:
+                self.is_running = True
         
         if self.on_queue_update:
             self.on_queue_update()
             
-        if not self.is_running:
+        if should_start:
             self._start_worker()
 
     def _start_worker(self):

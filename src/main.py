@@ -5,6 +5,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from ui.main_window import App
+from utils.context_menu import add_context_menu
 
 def main():
     # Manejo de argumentos para Menú Contextual
@@ -13,6 +14,12 @@ def main():
     parser.add_argument("--pdf2word", type=str, help="Convertir PDF a Word vía CLI")
     parser.add_argument("--word2pdf", type=str, help="Convertir Word a PDF vía CLI")
     args, unknown = parser.parse_known_args()
+
+    # Auto-registrar menú contextual silenciosamente
+    try:
+        add_context_menu()
+    except Exception as e:
+        print(f"Error registrando menú contextual: {e}")
 
     app = App()
 

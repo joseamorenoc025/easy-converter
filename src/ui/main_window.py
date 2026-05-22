@@ -29,6 +29,23 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.resizable(True, True)
         self.minsize(700, 550)
 
+        # Cargar ícono si existe
+        icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "assets", "icon.ico"))
+        if os.path.exists(icon_path):
+            try:
+                self.iconbitmap(icon_path)
+            except Exception as e:
+                print(f"[UI] Error cargando iconbitmap nativo: {e}")
+                print("[UI] Intentando cargar con iconphoto (fallback)...")
+                try:
+                    from PIL import Image, ImageTk
+                    img = Image.open(icon_path)
+                    photo = ImageTk.PhotoImage(img)
+                    self.iconphoto(False, photo)
+                    print("[UI] Ícono cargado exitosamente mediante fallback.")
+                except Exception as e2:
+                    print(f"[UI] Fallo absoluto cargando el ícono: {e2}")
+
         # Inicializar Componentes Core
         self.config_manager = ConfigManager()
         self.path_manager = PathManager(self.config_manager)
@@ -40,9 +57,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             on_queue_update=self.update_queue_ui
         )
 
-        # Variables de estado
-        self.conversion_mode = "pdf2word"
-
+        # Inicializar UI
         self.setup_ui()
         self.setup_watchers()
 
@@ -97,8 +112,16 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         if self.config_manager.get("open_folder_on_finish"): self.check_open.select()
         self.check_open.pack(pady=20, padx=20, anchor="w")
 
-        self.btn_context_menu = customtkinter.CTkButton(self.sidebar, text="Añadir a Menú Contextual", command=self.register_context_menu, height=30, fg_color="gray30")
-        self.btn_context_menu.pack(pady=10, padx=20, side="bottom")
+        # Credits and GitHub link (Footer del sidebar)
+        self.credits_frame = customtkinter.CTkFrame(self.sidebar, fg_color="transparent")
+        self.credits_frame.pack(side="bottom", pady=20, padx=20)
+
+        self.dev_label = customtkinter.CTkLabel(self.credits_frame, text="Desarrollado por:\nJosé Moreno", font=customtkinter.CTkFont(size=11, weight="bold"), text_color="gray70")
+        self.dev_label.pack(pady=(0, 5))
+
+        self.github_label = customtkinter.CTkLabel(self.credits_frame, text="⭐ Deja una estrella en GitHub", font=customtkinter.CTkFont(size=11, underline=True), text_color="#00E5FF", cursor="hand2")
+        self.github_label.pack()
+        self.github_label.bind("<Button-1>", lambda e: self.open_github())
 
         # Main Content
         self.main_frame = customtkinter.CTkFrame(self, fg_color="transparent")
@@ -108,57 +131,61 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.tabview = customtkinter.CTkTabview(self.main_frame)
         self.tabview.pack(fill="both", expand=True, pady=10)
         self.tabview.add("Conversión Manual")
-        self.tabview.add("Flujos de Trabajo")
+        self.tabview.add("Carpetas Automáticas")
 
         # --- TAB: Conversión Manual ---
         self.manual_tab = self.tabview.tab("Conversión Manual")
 
-        # Layout para Manual Tab: Izquierda (Controles) | Derecha (Preview)
+        # Layout para Manual Tab
         self.manual_content = customtkinter.CTkFrame(self.manual_tab, fg_color="transparent")
         self.manual_content.pack(fill="both", expand=True)
 
         self.left_manual = customtkinter.CTkFrame(self.manual_content, fg_color="transparent")
         self.left_manual.pack(side="left", fill="both", expand=True, padx=(0, 10))
 
-        # Selector de modo
-        self.mode_frame = customtkinter.CTkFrame(self.left_manual, fg_color="transparent")
-        self.mode_frame.pack(pady=10)
+        # Descripción breve
+        desc_text = "Convierte documentos entre PDF y Word bidireccionalmente\nsin perder calidad. Arrastra archivos individuales abajo,\no usa Carpetas Automáticas para procesamiento desatendido."
+        self.desc_label = customtkinter.CTkLabel(self.left_manual, text=desc_text, font=customtkinter.CTkFont(size=13), justify="left", text_color="gray80")
+        self.desc_label.pack(pady=(5, 15), anchor="w")
 
-        self.btn_pdf2word = customtkinter.CTkButton(self.mode_frame, text="PDF a Word", command=lambda: self.set_mode("pdf2word"), width=120)
-        self.btn_pdf2word.grid(row=0, column=0, padx=10)
-        self.btn_word2pdf = customtkinter.CTkButton(self.mode_frame, text="Word a PDF", command=lambda: self.set_mode("word2pdf"), width=120, fg_color="gray30")
-        self.btn_word2pdf.grid(row=0, column=1, padx=10)
+        # Dashboard Frame (Estadísticas futuristas)
+        self.dash_frame = customtkinter.CTkFrame(self.left_manual, corner_radius=10, fg_color="#1E1E24", border_width=1, border_color="#00E5FF")
+        self.dash_frame.pack(pady=(0, 10), fill="x")
+        
+        self.stats_title = customtkinter.CTkLabel(self.dash_frame, text="MÓDULO DE CONVERSIÓN", font=customtkinter.CTkFont(size=11, weight="bold"), text_color="#00E5FF")
+        self.stats_title.pack(pady=(10, 0))
+        
+        self.total_converted_label = customtkinter.CTkLabel(self.dash_frame, text=f"Total procesados: {self.config_manager.get('total_converted', 0)}", font=customtkinter.CTkFont(size=14))
+        self.total_converted_label.pack(pady=(5, 10))
 
-        # Drop Zone
-        self.drop_frame = customtkinter.CTkFrame(self.left_manual, height=100, corner_radius=15)
+        # Drop Zone (Rediseño futurista)
+        self.drop_frame = customtkinter.CTkFrame(self.left_manual, height=180, corner_radius=15, fg_color="#1a1a1a", border_width=2, border_color="#00E5FF")
         self.drop_frame.pack(pady=10, fill="x")
         self.drop_frame.pack_propagate(False)
 
-        self.drop_label = customtkinter.CTkLabel(self.drop_frame, text="Arrastra archivos aquí o haz clic")
-        self.drop_label.pack(expand=True)
-        self.drop_frame.bind("<Button-1>", lambda e: self.select_files_dialog())
-        self.drop_label.bind("<Button-1>", lambda e: self.select_files_dialog())
+        self.drop_icon = customtkinter.CTkLabel(self.drop_frame, text="📥", font=customtkinter.CTkFont(size=48))
+        self.drop_icon.pack(pady=(30, 0))
+
+        self.drop_label = customtkinter.CTkLabel(self.drop_frame, text="Arrastra tus PDF o Word aquí", font=customtkinter.CTkFont(size=16, weight="bold"))
+        self.drop_label.pack(pady=(5, 0))
+        
+        self.drop_sub = customtkinter.CTkLabel(self.drop_frame, text="El motor detectará el formato automáticamente", font=customtkinter.CTkFont(size=12), text_color="gray60")
+        self.drop_sub.pack()
+
+        # Vincular clics a la zona completa
+        for widget in [self.drop_frame, self.drop_icon, self.drop_label, self.drop_sub]:
+            widget.bind("<Button-1>", lambda e: self.select_files_dialog())
+            
         self.drop_frame.drop_target_register(DND_FILES)
         self.drop_frame.dnd_bind('<<Drop>>', self.handle_drop)
 
-        # Preview Panel (Nuevo)
-        self.preview_frame = customtkinter.CTkFrame(self.manual_content, width=200, corner_radius=10)
-        self.preview_frame.pack(side="right", fill="y", pady=10)
-        self.preview_frame.pack_propagate(False)
-
-        self.preview_title = customtkinter.CTkLabel(self.preview_frame, text="Vista Previa", font=customtkinter.CTkFont(size=12, weight="bold"))
-        self.preview_title.pack(pady=5)
-
-        self.preview_image_label = customtkinter.CTkLabel(self.preview_frame, text="Sin selección")
-        self.preview_image_label.pack(expand=True, padx=10, pady=10)
-
-        # Queue (ahora dentro de la tab manual para mejor enfoque)
+        # Queue
         self.scroll_frame = customtkinter.CTkScrollableFrame(self.left_manual, height=250)
         self.scroll_frame.pack(pady=10, fill="both", expand=True)
         self.item_widgets = {}
 
-        # --- TAB: Flujos de Trabajo ---
-        self.workflow_tab = self.tabview.tab("Flujos de Trabajo")
+        # --- TAB: Carpetas Automáticas ---
+        self.workflow_tab = self.tabview.tab("Carpetas Automáticas")
         self.workflow_panel = WorkflowPanel(self.workflow_tab, self.workflow_manager, on_watcher_change=self.handle_watcher_change)
         self.workflow_panel.pack(fill="both", expand=True)
 
@@ -202,13 +229,13 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             if path.exists():
                 self.process_selected_file(str(path))
 
+    def open_github(self):
+        import webbrowser
+        webbrowser.open("https://github.com/joseamorenoc025/easy-converter")
+
     def process_selected_file(self, file_path):
         path = Path(file_path)
         ext = path.suffix.lower()
-        
-        # Actualizar vista previa si es PDF
-        if ext == '.pdf':
-            self.update_preview(path)
         
         # Lógica de Auto-Detección mejorada
         mode = None
@@ -220,31 +247,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         if mode:
             self.queue_manager.add_item(path, mode)
 
-    def update_preview(self, pdf_path):
-        import fitz
-        from PIL import Image
-        try:
-            doc = fitz.open(str(pdf_path))
-            page = doc.load_page(0)
-            pix = page.get_pixmap(matrix=fitz.Matrix(0.5, 0.5)) # Baja resolución para preview rápida
-            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-            
-            # Ajustar al tamaño del panel
-            preview_width = 180
-            aspect = img.height / img.width
-            preview_height = int(preview_width * aspect)
-            
-            ctk_img = customtkinter.CTkImage(light_image=img, dark_image=img, size=(preview_width, preview_height))
-            self.preview_image_label.configure(image=ctk_img, text="")
-            doc.close()
-        except Exception as e:
-            self.preview_image_label.configure(image=None, text=f"Error en preview")
-            print(f"Error generando preview: {e}")
 
-    def set_mode(self, mode):
-        self.conversion_mode = mode
-        self.btn_pdf2word.configure(fg_color="#1f538d" if mode == "pdf2word" else "gray30")
-        self.btn_word2pdf.configure(fg_color="#1f538d" if mode == "word2pdf" else "gray30")
 
     def process_item(self, item: QueueItem):
         # Calcular ruta de salida real
@@ -263,6 +266,12 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
                 success, result = EasyConverter.docx_to_pdf(item.file_path, output_path=output_path, progress_tracker=tracker)
             
             if success:
+                # Update statistics dashboard
+                current_total = self.config_manager.get("total_converted", 0)
+                new_total = current_total + 1
+                self.config_manager.set("total_converted", new_total)
+                self.after(0, lambda: self.total_converted_label.configure(text=f"Total procesados: {new_total}"))
+                
                 # Aplicar workflow si existe
                 if item.workflow_profile:
                     item.message = "Aplicando reglas..."
@@ -275,15 +284,10 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
                 if self.config_manager.get("open_folder_on_finish"):
                     self.path_manager.open_in_explorer(Path(item.result_path))
         except Exception as e:
-            raise e
+            friendly_msg = self.error_handler.handle(e, context={"file": str(item.file_path), "mode": item.mode})
+            raise Exception(friendly_msg) from e
 
-    def register_context_menu(self):
-        from utils.context_menu import add_context_menu
-        try:
-            add_context_menu()
-            messagebox.showinfo("Éxito", "Menú contextual añadido correctamente.\nAhora puedes hacer clic derecho en archivos PDF/DOCX.")
-        except Exception as e:
-            messagebox.showerror("Error", f"No se pudo añadir al registro: {e}")
+
 
     def update_queue_ui(self):
         self.after(0, self._render_queue)
@@ -301,7 +305,10 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             if item_id not in self.item_widgets:
                 frame = customtkinter.CTkFrame(self.scroll_frame)
                 frame.pack(fill="x", pady=2, padx=5)
-                name_label = customtkinter.CTkLabel(frame, text=item.file_path.name, width=250, anchor="w", font=customtkinter.CTkFont(size=12, weight="bold"))
+                display_name = item.file_path.name
+                if len(display_name) > 30:
+                    display_name = display_name[:27] + "..."
+                name_label = customtkinter.CTkLabel(frame, text=display_name, width=250, anchor="w", font=customtkinter.CTkFont(size=12, weight="bold"))
                 name_label.pack(side="left", padx=10)
                 progress_bar = customtkinter.CTkProgressBar(frame, width=150)
                 progress_bar.set(0)

@@ -46,13 +46,10 @@ class EasyConverter:
             if progress_tracker:
                 progress_tracker.update(10, f"Iniciando conversión de {total_pages} páginas...")
             
-            # Callback nativo de pdf2docx
-            def on_page_update(page_num, total_pages_cb):
-                if progress_tracker:
-                    percent = int((page_num / total_pages_cb) * 100)
-                    progress_tracker.update(percent, f"Convirtiendo página {page_num}/{total_pages_cb}")
+            if progress_tracker:
+                progress_tracker.update(50, f"Convirtiendo PDF a Word...")
 
-            cv.convert(str(docx_path), start=0, end=None, callbacks=[on_page_update])
+            cv.convert(str(docx_path), start=0, end=None)
             
             cv.close()
             
@@ -98,7 +95,15 @@ class EasyConverter:
                 progress_tracker.update(40, "Fase 2/3: Renderizando con Microsoft Word...")
 
             # Conversión real
-            word_to_pdf_conv(str(docx_path_obj), str(pdf_path))
+            if docx_path_obj.suffix.lower() == '.doc':
+                # docx2pdf no soporta .doc, usamos COM directo
+                import win32com.client
+                word = win32com.client.Dispatch("Word.Application")
+                doc = word.Documents.Open(str(docx_path_obj))
+                doc.SaveAs(str(pdf_path), FileFormat=17) # 17 = wdFormatPDF
+                doc.Close()
+            else:
+                word_to_pdf_conv(str(docx_path_obj), str(pdf_path))
             
             if progress_tracker:
                 progress_tracker.update(100, "Fase 3/3: ¡Conversión finalizada!")

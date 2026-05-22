@@ -1,6 +1,4 @@
-import win32com.client
 import sys
-import pythoncom
 import gc
 
 class WordChecker:
@@ -13,8 +11,16 @@ class WordChecker:
         if sys.platform != "win32":
             return False
             
+        import pythoncom
+        import win32com.client
+            
+        already_initialized = False
         try:
-            pythoncom.CoInitialize()
+            try:
+                pythoncom.CoInitialize()
+            except pythoncom.com_error:
+                already_initialized = True
+                
             # Intentar crear una instancia de Word sin mostrar la ventana
             word = win32com.client.Dispatch("Word.Application")
             word.Visible = False
@@ -27,7 +33,11 @@ class WordChecker:
         except Exception:
             return False
         finally:
-            pythoncom.CoUninitialize()
+            if not already_initialized:
+                try:
+                    pythoncom.CoUninitialize()
+                except Exception:
+                    pass
 
     @staticmethod
     def check_word_or_fail():

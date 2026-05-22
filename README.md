@@ -1,56 +1,41 @@
 # Easy Converter 📄↔️📝
 
-Un conversor de escritorio inteligente y bidireccional entre **PDF** y **Word (DOCX)**. Ahora no solo convierte archivos, sino que gestiona tu flujo de trabajo de forma automatizada.
+**Easy Converter** es una potente herramienta de escritorio diseñada para convertir documentos bidireccionalmente entre **PDF** y **Word (DOCX/DOC)** sin perder calidad, estructura, ni formatos. Con una interfaz moderna (Cyber/Neon) y automatización profunda de carpetas, tu trabajo pesado se hace en segundos.
 
-## ✨ Características
-- **Conversión de Alta Calidad:** Mantiene tablas, imágenes y párrafos con precisión.
-- **Flujos de Trabajo Inteligentes (¡NUEVO!):** Define perfiles con reglas de post-procesamiento.
-- **Carpetas Inteligentes (¡NUEVO!):** Monitoreo automático de carpetas para conversión desatendida.
-- **Reglas Automatizadas:** Renombrado automático (con fechas/patrones), mover o copiar archivos tras la conversión.
-- **Interfaz Moderna:** Pestañas separadas para control manual y gestión de flujos (basada en `customtkinter`).
-- **Arrastrar y Soltar:** Soporte nativo para `Drag & Drop`.
-- **Procesamiento en Segundo Plano:** Multihilo para no bloquear la interfaz.
+## ✨ Características Principales
+- **Conversión de Alta Fidelidad:** Mantiene intactas las tablas, imágenes y la estructura de los párrafos.
+- **Carpetas Automáticas (Workflow):** Configura una carpeta y la aplicación convertirá instantáneamente cualquier archivo que dejes ahí, sin que tengas que hacer clics.
+- **Soporte Universal Word:** Compatible con `.docx` modernos y `.doc` antiguos gracias al fallback inteligente de motor COM.
+- **Integración con Windows:** Haz clic derecho en cualquier archivo de tu sistema operativo para convertirlo mediante el menú contextual automático.
+- **Dashboard en Tiempo Real:** Estadísticas de los documentos convertidos e indicadores de carga procesada visualmente.
+- **100% Multihilo:** Procesamiento veloz en segundo plano sin que la aplicación se "cuelgue".
 
-## 🛠️ Requisitos
-- **Python 3.10** o superior.
-- **Microsoft Word** instalado (obligatorio para Word a PDF en Windows).
+## 🛠️ Requisitos del Sistema
+- Sistema Operativo: Windows 10/11.
+- Microsoft Word (Obligatorio instalado en el sistema para permitir la inter-operatividad de COM).
 
-## 🚀 Instalación
+## 🚀 Instalación y Uso Rápido
+### Opción 1: Versión Portable (.exe)
+Visita la sección de [Releases](../../releases) y descarga la última versión en `.zip`. Descomprime y ejecuta `EasyConverter.exe`. ¡No necesitas instalar nada más!
 
+### Opción 2: Para Desarrolladores (Código Fuente)
 1. Clona el repositorio.
-2. Abre una terminal en la carpeta del proyecto.
-3. Instala las dependencias:
+2. Instala las dependencias:
    ```bash
    pip install -r requirements.txt
    ```
+3. Ejecuta la aplicación:
+   ```bash
+   python src/main.py
+   ```
 
-## 📖 Uso
-
-Ejecuta el script principal:
-```bash
-python src/main.py
-```
-
-### Gestión de Flujos:
-1. Ve a la pestaña **"Flujos de Trabajo"**.
-2. Crea un **"Nuevo Perfil"** y elige una carpeta para monitorear.
+## 📚 ¿Cómo funcionan las Carpetas Automáticas?
+1. Ve a la pestaña **"Carpetas Automáticas"**.
+2. Crea un **"Nuevo Perfil"**, elige qué carpeta vigilar (Ej. `Descargas`).
 3. Activa el interruptor **"Monitorear"**.
-4. ¡Cualquier archivo compatible que copies a esa carpeta se convertirá y procesará automáticamente!
-
-## 📦 Bibliotecas Principales
-- [pdf2docx](https://github.com/ArtifexSoftware/pdf2docx): PDF a DOCX.
-- [docx2pdf](https://github.com/AlJohri/docx2pdf): DOCX a PDF.
-- [watchdog](https://github.com/gorakhargosh/watchdog): Monitoreo de carpetas en tiempo real.
-- [customtkinter](https://github.com/TomSchimansky/CustomTkinter): Interfaz gráfica.
-
-## 📁 Estructura del Proyecto
-- `src/`: Código fuente de la aplicación.
-  - `core/`: Lógica de conversión, flujos y monitoreo.
-  - `ui/`: Interfaz gráfica y componentes.
-  - `utils/`: Utilidades de configuración y herramientas PDF/Word.
-- `assets/`: Recursos visuales e iconos.
-- `build/`: Configuraciones de compilación y hooks de PyInstaller.
-- `tests/`: Pruebas unitarias y de integración.
+4. ¡Listo! Cualquier PDF o Word que caiga ahí, se procesará automáticamente y se guardará según tus reglas (como renombrar o mover a la nube).
 
 ---
-*Desarrollado con ❤️ por Gemini CLI*
+⭐ Si este software te ha salvado horas de trabajo, **¡considera dejarle una estrella al repositorio!**
+
+*Desarrollado y mantenido por [José Moreno](https://github.com/joseamorenoc025).*

@@ -1,10 +1,13 @@
 import os
 import shutil
+import logging
 from enum import Enum
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 class RuleType(Enum):
     RENAME = "rename"
@@ -82,7 +85,7 @@ class WorkflowManager:
             try:
                 current_path = self._execute_rule(rule, current_path)
             except Exception as e:
-                print(f"Error aplicando regla {rule.type}: {e}")
+                logger.error(f"Error aplicando regla {rule.type}: {e}")
         
         return current_path
 
@@ -122,6 +125,11 @@ class WorkflowManager:
                 font_size = rule.params.get("size", 11)
                 
                 for p in doc.paragraphs:
+                    # Skip non-body paragraphs to preserve formatting (headings, etc)
+                    style_name = p.style.name if p.style else ""
+                    if style_name not in ["Normal", "Body Text"]:
+                        continue
+
                     # Unir líneas cortadas por saltos manuales
                     if "\n" in p.text:
                         p.text = p.text.replace("\n", " ")
@@ -131,14 +139,15 @@ class WorkflowManager:
                         run.font.name = font_name
                         run.font.size = Pt(font_size)
                 
-                # Eliminar párrafos vacíos
+                # Eliminar párrafos vacíos (solo en cuerpo)
                 for p in list(doc.paragraphs):
-                    if not p.text.strip():
+                    style_name = p.style.name if p.style else ""
+                    if style_name in ["Normal", "Body Text"] and not p.text.strip():
                         p._element.getparent().remove(p._element)
                 
                 doc.save(file_path)
             except Exception as e:
-                print(f"Error sanitizando documento: {e}")
+                logger.error(f"Error sanitizando documento: {e}")
             
             return file_path
 
