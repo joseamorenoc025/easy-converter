@@ -3,7 +3,7 @@
 ## 📦 Información del Release
 
 **Versión:** 2.0.0  
-**Fecha:** 2024  
+**Fecha:** 2026  
 **Tipo:** Major Release  
 **Plataforma:** Windows 10/11  
 
@@ -167,12 +167,12 @@ Este proyecto está licenciado bajo la MIT License - ver [LICENSE](LICENSE) para
 
 ## 🔮 Próximas Versiones (Roadmap)
 
-### v2.1.0 (Q1 2025)
+### v2.1.0 (Q3 2026)
 - [ ] Soporte para imágenes (JPG/PNG → PDF/Word)
 - [ ] Modo servidor (API REST)
 - [ ] Plugin system para formatos personalizados
 
-### v2.2.0 (Q2 2025)
+### v2.2.0 (Q4 2026)
 - [ ] Soporte Linux/macOS nativo
 - [ ] Conversión en la nube opcional
 - [ ] Editor de reglas avanzado
@@ -181,4 +181,4 @@ Este proyecto está licenciado bajo la MIT License - ver [LICENSE](LICENSE) para
 
 **¡Gracias por usar Easy Converter v2.0.0!** 🎉
 
-*Última actualización: 2024*
+*Última actualización: 2026*
