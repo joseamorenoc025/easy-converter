@@ -3,6 +3,7 @@ Servicios específicos de plataforma Windows.
 Implementa IPlatformService para aislar dependencias de win32com.
 """
 import sys
+import importlib.util
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -16,19 +17,10 @@ class WindowsPlatformService(IPlatformService):
         self._winreg_available = False
         self._win32com_available = False
         
-        # Intentar importar módulos de Windows
+        # Verificar disponibilidad de módulos Windows sin importarlos
         if sys.platform == "win32":
-            try:
-                import winreg
-                self._winreg_available = True
-            except ImportError:
-                pass
-            
-            try:
-                import win32com.client
-                self._win32com_available = True
-            except ImportError:
-                pass
+            self._winreg_available = importlib.util.find_spec("winreg") is not None
+            self._win32com_available = importlib.util.find_spec("win32com.client") is not None
     
     def register_context_menu(self, enabled: bool) -> Tuple[bool, str]:
         """Registra o elimina el menú contextual en Windows."""
