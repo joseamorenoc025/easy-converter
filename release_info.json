@@ -1,0 +1,63 @@
+{
+  "app_name": "Easy Converter",
+  "version": "2.0.0",
+  "description": "Conversor bidireccional PDF ↔ Word profesional",
+  "languages": {
+    "es": {
+      "name": "Español",
+      "native_name": "Español"
+    },
+    "en": {
+      "name": "English",
+      "native_name": "English"
+    },
+    "pt": {
+      "name": "Português",
+      "native_name": "Português"
+    },
+    "fr": {
+      "name": "Français",
+      "native_name": "Français"
+    },
+    "de": {
+      "name": "Deutsch",
+      "native_name": "Deutsch"
+    }
+  },
+  "default_language": "es",
+  "features": [
+    "Conversión PDF a Word y viceversa",
+    "Procesamiento por lotes",
+    "Carpetas monitorizadas",
+    "Reglas de post-procesamiento",
+    "Historial de conversiones",
+    "Sistema de deshacer",
+    "Perfiles rápidos",
+    "Multi-idioma",
+    "Actualizaciones automáticas"
+  ],
+  "requirements": {
+    "os": "Windows 10/11",
+    "python": "3.9+",
+    "optional": [
+      "Microsoft Word (para conversión DOCX)",
+      "Tesseract OCR (para PDFs escaneados)"
+    ]
+  },
+  "release_notes": {
+    "v2.0.0": [
+      "Arquitectura MVC completamente refactorizada",
+      "Sistema de seguridad mejorado con validación de magic numbers",
+      "Cola de procesamiento doble para mejor rendimiento",
+      "Soporte multi-idioma (ES, EN, PT, FR, DE)",
+      "Asistente de bienvenida para primer uso",
+      "Historial persistente con límite configurable",
+      "Sistema de deshacer operaciones",
+      "Perfiles rápidos preconfigurados",
+      "Actualizaciones automáticas",
+      "Instalador incluye Tesseract OCR",
+      "Cobertura de tests >90%",
+      "Integración con SonarCloud y CI/CD"
+    ]
+  }
+}

@@ -1,0 +1,100 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ published ]
+
+jobs:
+  test-and-lint:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov mypy flake8 black ruff
+    
+    - name: Lint with flake8 and ruff
+      run: |
+        flake8 src/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        ruff check src/ tests/
+    
+    - name: Type check with mypy
+      run: |
+        mypy src/ --ignore-missing-imports --no-strict-optional
+    
+    - name: Test with pytest
+      run: |
+        pytest tests/ -v --cov=src --cov-report=xml --cov-report=html
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+    
+    - name: Upload coverage to SonarCloud
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        args: >
+          -Dsonar.organization=easy-converter
+          -Dsonar.projectKey=easy_converter
+          -Dsonar.sources=src/
+          -Dsonar.tests=tests/
+          -Dsonar.python.coverage.reportPaths=coverage.xml
+
+  build-windows:
+    needs: test-and-lint
+    runs-on: windows-latest
+    if: github.event_name == 'release'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Download Tesseract OCR installer
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/UB-Mannheim/tesseract/wiki" -OutFile tesseract_info.txt
+        # En producción, descargar el instalador real de Tesseract
+        # Invoke-WebRequest -Uri "URL_DEL_INSTALLER_TESSERACT" -OutFile tesseract-ocr-w64-setup.exe
+    
+    - name: Build executable with PyInstaller
+      run: |
+        pyinstaller build/easy_converter.spec --clean
+    
+    - name: Create Installer with Inno Setup
+      run: |
+        iscc build/setup.iss /O"dist" /F"EasyConverter-Setup-${{ github.ref_name }}"
+    
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/EasyConverter-Setup-*.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

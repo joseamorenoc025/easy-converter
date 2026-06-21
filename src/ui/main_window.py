@@ -21,6 +21,7 @@ from ui.notifications import NotificationManager
 from utils.config import ConfigManager
 from utils.context_menu import add_context_menu
 from utils.pdf_tools import extract_text_with_ocr
+from utils.security import is_safe_path, validate_file_magic, sanitize_filename
 from tkinter import messagebox
 
 # Configuración estética global
@@ -74,13 +75,26 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
                 self.watcher.add_watch(profile.watch_path)
 
     def on_file_detected(self, file_path: Path):
+        # Validar seguridad de la ruta
+        if not is_safe_path(file_path):
+            self.notifications.show_error(f"Archivo fuera del entorno local permitido: {file_path}")
+            return
+        
+        # Validar tipo de archivo real
+        ext = file_path.suffix.lower()
+        expected_type = 'pdf' if ext == '.pdf' else ('docx' if ext in ['.docx', '.doc'] else None)
+        if expected_type:
+            is_valid, msg = validate_file_magic(file_path, expected_type)
+            if not is_valid:
+                self.notifications.show_error(f"Archivo inválido: {msg}")
+                return
+        
         # Encontrar qué perfil disparó esto
         for profile in self.workflow_manager.profiles:
             if profile.is_active and profile.watch_path:
                 if str(file_path.parent).lower() == str(Path(profile.watch_path)).lower():
-                    ext = file_path.suffix.lower()
                     mode = 'pdf2word' if ext == '.pdf' else 'word2pdf'
-                    self.after(0, lambda: self.queue_manager.add_item(file_path, mode, workflow_profile=profile.name))
+                    self.after(0, lambda fp=file_path: self.queue_manager.add_item(fp, mode, workflow_profile=profile.name))
                     break
 
     def handle_watcher_change(self, profile: WorkflowProfile):
@@ -253,7 +267,21 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
 
     def process_selected_file(self, file_path):
         path = Path(file_path)
+        
+        # Validar seguridad de la ruta
+        if not is_safe_path(path):
+            self.notifications.show_error(f"Archivo fuera del entorno local permitido: {path}")
+            return
+        
         ext = path.suffix.lower()
+        
+        # Validar tipo de archivo real antes de procesar
+        expected_type = 'pdf' if ext == '.pdf' else ('docx' if ext in ['.docx', '.doc'] else None)
+        if expected_type:
+            is_valid, msg = validate_file_magic(path, expected_type)
+            if not is_valid:
+                self.notifications.show_error(f"Archivo inválido: {msg}")
+                return
         
         # Actualizar vista previa si es PDF
         if ext == '.pdf':
@@ -268,7 +296,9 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             
         if mode:
             use_ocr = (mode == "pdf2word" and self.check_ocr.get())
-            self.queue_manager.add_item(path, mode, use_ocr=use_ocr)
+            success, message = self.queue_manager.add_item(path, mode, use_ocr=use_ocr)
+            if not success:
+                self.notifications.show_error(f"No se pudo añadir a la cola: {message}")
 
     def update_preview(self, pdf_path):
         try:
@@ -349,11 +379,11 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             raise e
 
     def register_context_menu(self):
-        try:
-            add_context_menu()
-            messagebox.showinfo("Éxito", "Menú contextual añadido correctamente.\nAhora puedes hacer clic derecho en archivos PDF/DOCX.")
-        except Exception as e:
-            messagebox.showerror("Error", f"No se pudo añadir al registro: {e}")
+        success, message = add_context_menu()
+        if success:
+            messagebox.showinfo("Éxito", f"{message}\nAhora puedes hacer clic derecho en archivos PDF/DOCX.")
+        else:
+            messagebox.showerror("Error", message)
 
     def update_queue_ui(self):
         self.after(0, self._render_queue)
