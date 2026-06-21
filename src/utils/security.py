@@ -84,13 +84,14 @@ def is_safe_path(file_path: Union[str, pathlib.Path], allowed_bases: Optional[li
         True si la ruta es segura, False en caso contrario.
     """
     try:
-        path_obj = pathlib.Path(file_path).resolve()
-        
-        # Verificar si es una ruta absoluta
-        if not path_obj.is_absolute():
+        # Verificar si es una ruta absoluta ANTES de resolver (resolve convierte relativas en absolutas)
+        original_path = pathlib.Path(file_path)
+        if not original_path.is_absolute():
             logger.warning(f"Ruta relativa detectada y rechazada: {file_path}")
             return False
             
+        path_obj = original_path.resolve()
+        
         # Determinar bases permitidas
         if allowed_bases is None:
             allowed_bases = get_user_local_paths()
@@ -163,7 +164,7 @@ def sanitize_filename(filename: str) -> str:
     
     sanitized = filename
     for char in invalid_chars:
-        sanitized = sanitized.replace(char, '_')
+        sanitized = sanitized.replace(char, '')
         
     # Eliminar espacios al inicio/final y puntos al inicio (archivos ocultos en Linux)
     sanitized = sanitized.strip().lstrip('.')

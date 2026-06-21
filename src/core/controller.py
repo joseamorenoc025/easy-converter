@@ -99,13 +99,13 @@ class AppController:
         Returns:
             Tuple[bool, str]: (es_válido, mensaje_de_error_o_exito)
         """
+        # Validar que el archivo exista (antes que seguridad, para mejor msg de error)
+        if not file_path.exists():
+            return False, f"El archivo no existe: {file_path}"
+        
         # Validar que el path sea seguro (entorno local del usuario)
         if not is_safe_path(file_path):
             return False, f"El archivo está fuera del entorno local permitido: {file_path}"
-        
-        # Validar que el archivo exista
-        if not file_path.exists():
-            return False, f"El archivo no existe: {file_path}"
         
         # Validar magic numbers
         ext = file_path.suffix.lower()

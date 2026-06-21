@@ -2,6 +2,7 @@
 Tests para el controlador de la aplicación (AppController).
 Verifica la inyección de dependencias y la lógica de negocio.
 """
+import os
 import pytest
 from pathlib import Path
 from unittest.mock import Mock
@@ -101,9 +102,8 @@ class TestAppControllerInitialization:
         assert len(controller.conversion_history) == 0
         assert len(controller.get_active_jobs()) == 0
     
-    def test_controller_registers_progress_callback(self, mock_queue_manager, mock_view_callback):
+    def test_controller_registers_progress_callback(self, controller, mock_queue_manager):
         """Verifica que se registra el callback de progreso."""
-        # El controller debería haber registrado el callback en __init__
         mock_queue_manager.register_progress_callback.assert_called_once()
 
 
@@ -121,8 +121,12 @@ class TestFileValidation:
     
     def test_validate_unsafe_path(self, controller):
         """Rechaza archivos fuera del entorno local."""
-        unsafe_path = Path("/root/unsafe/file.pdf")
-        
+        # Usar un path que exista pero esté fuera del entorno permitido
+        if os.name == 'nt':
+            unsafe_path = Path(os.environ.get('SystemRoot', 'C:\\Windows')) / "System32" / "notepad.exe"
+        else:
+            unsafe_path = Path("/etc/passwd")
+    
         is_valid, msg = controller.validate_file_for_conversion(unsafe_path)
         assert is_valid is False
         assert "fuera del entorno local" in msg
