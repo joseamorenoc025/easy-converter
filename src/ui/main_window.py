@@ -1,7 +1,4 @@
 import customtkinter
-import os
-import re
-import threading
 from pathlib import Path
 from tkinterdnd2 import TkinterDnD
 from PIL import Image
@@ -21,7 +18,7 @@ from ui.notifications import NotificationManager
 from utils.config import ConfigManager
 from utils.context_menu import add_context_menu
 from utils.pdf_tools import extract_text_with_ocr
-from utils.security import is_safe_path, validate_file_magic, sanitize_filename
+from utils.security import is_safe_path, validate_file_magic
 from tkinter import messagebox
 
 # Configuración estética global
@@ -129,11 +126,13 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.btn_select_custom.pack(pady=5, padx=30)
         
         self.check_open = customtkinter.CTkCheckBox(self.sidebar, text="Abrir al finalizar", command=self.save_settings)
-        if self.config_manager.get("open_folder_on_finish"): self.check_open.select()
+        if self.config_manager.get("open_folder_on_finish"):
+            self.check_open.select()
         self.check_open.pack(pady=5, padx=20, anchor="w")
 
         self.check_ocr = customtkinter.CTkCheckBox(self.sidebar, text="OCR en PDF→Word (lento)", command=self.save_settings)
-        if self.config_manager.get("use_ocr"): self.check_ocr.select()
+        if self.config_manager.get("use_ocr"):
+            self.check_ocr.select()
         self.check_ocr.pack(pady=5, padx=20, anchor="w")
 
         self.theme_label = customtkinter.CTkLabel(self.sidebar, text="Tema:", font=customtkinter.CTkFont(size=12, weight="bold"))
@@ -316,7 +315,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             self.preview_image_label.configure(image=ctk_img, text="")
             doc.close()
         except Exception as e:
-            self.preview_image_label.configure(image=None, text=f"Error en preview")
+            self.preview_image_label.configure(image=None, text="Error en preview")
             print(f"Error generando preview: {e}")
 
     def set_mode(self, mode):
@@ -373,8 +372,10 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
                 if self.config_manager.get("open_folder_on_finish"):
                     self.path_manager.open_in_explorer(Path(item.result_path))
         except Exception as e:
-            self.after(0, lambda f=item.file_path.name: self.notifications.error(
-                "Error de conversión", f"{f}: {str(e)[:100]}"
+            error_msg = str(e)[:100]
+            file_name = item.file_path.name
+            self.after(0, lambda f=file_name, err=error_msg: self.notifications.error(
+                "Error de conversión", f"{f}: {err}"
             ))
             raise e
 

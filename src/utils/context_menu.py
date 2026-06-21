@@ -1,7 +1,6 @@
 import sys
 import winreg
 import os
-from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
@@ -47,7 +46,7 @@ def add_context_menu() -> tuple[bool, str]:
                     winreg.SetValueEx(key, "", 0, winreg.REG_SZ, cmd)
             except PermissionError as pe:
                 logger.error(f"Permiso denegado para extensión {ext}: {pe}")
-                return False, f"Permiso denegado para modificar el registro. Ejecuta como administrador."
+                return False, "Permiso denegado para modificar el registro. Ejecuta como administrador."
             except OSError as oe:
                 logger.error(f"Error de OS para extensión {ext}: {oe}")
                 return False, f"Error de sistema al modificar registro: {oe}"

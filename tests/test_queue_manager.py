@@ -3,7 +3,6 @@ import threading
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import pytest
 
 from core.queue_manager import ConversionQueue, QueueItem
 

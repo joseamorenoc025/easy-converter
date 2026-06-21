@@ -1,4 +1,3 @@
-import os
 import gc
 import logging
 import pythoncom
@@ -7,7 +6,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 from pdf2docx import Converter
 from docx2pdf import convert as word_to_pdf_conv
-from core.error_handler import PermissionDeniedError, FileCorruptedError, EasyConverterError
+from core.error_handler import PermissionDeniedError
 from utils.word_checker import WordChecker
 
 # Configuración de logging
@@ -36,7 +35,8 @@ class EasyConverter:
             # Verificar permisos
             if docx_path.exists():
                 try:
-                    with open(docx_path, 'a'): pass
+                    with open(docx_path, 'a'):
+                        pass  # Verificar acceso de escritura
                 except PermissionError:
                     raise PermissionDeniedError(f"No se puede escribir en {docx_path}. ¿Está abierto?")
 
@@ -97,7 +97,8 @@ class EasyConverter:
             # Verificar permisos en destino
             if pdf_path.exists():
                 try:
-                    with open(pdf_path, 'a'): pass
+                    with open(pdf_path, 'a'):
+                        pass  # Verificar acceso de escritura
                 except PermissionError:
                     raise PermissionDeniedError(f"No se puede escribir en {pdf_path}. ¿Está abierto?")
 

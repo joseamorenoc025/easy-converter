@@ -81,7 +81,6 @@ def extract_text_with_ocr(pdf_path: str, lang: str = "spa") -> str:
     try:
         import pytesseract
         from PIL import Image
-        import io
     except ImportError:
         return ""
     doc = fitz.open(pdf_path)

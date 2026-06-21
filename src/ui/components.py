@@ -1,7 +1,7 @@
 import customtkinter
 from tkinterdnd2 import DND_FILES
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable
 
 class FileDropZone(customtkinter.CTkFrame):
     def __init__(self, master, on_drop: Callable, text="Arrastra archivos aquí o haz clic", **kwargs):

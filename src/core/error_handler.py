@@ -1,8 +1,5 @@
-import os
-import sys
 import logging
 from pathlib import Path
-from datetime import datetime
 from appdirs import user_log_dir
 
 class EasyConverterError(Exception):
@@ -79,7 +76,7 @@ class ErrorHandler:
                 while attempts < max_attempts:
                     try:
                         return func(*args, **kwargs)
-                    except Exception as e:
+                    except Exception:
                         attempts += 1
                         if attempts == max_attempts:
                             raise
