@@ -1,5 +1,4 @@
 import json
-import os
 import threading
 from pathlib import Path
 from appdirs import user_config_dir

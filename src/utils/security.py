@@ -3,7 +3,6 @@ Módulo de seguridad para validación de rutas y tipos de archivo.
 Garantiza que las operaciones se realicen solo en entornos locales seguros
 y que los archivos correspondan a sus extensiones declaradas.
 """
-import os
 import pathlib
 from typing import Tuple, Optional
 import logging

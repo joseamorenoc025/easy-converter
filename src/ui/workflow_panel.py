@@ -1,5 +1,4 @@
 import customtkinter
-from pathlib import Path
 from core.workflow import WorkflowProfile, WorkflowRule, RuleType, WorkflowManager
 from typing import Callable
 

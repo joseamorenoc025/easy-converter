@@ -139,8 +139,9 @@ class MergePanel(customtkinter.CTkFrame):
                 merge_pdfs([str(p) for p in self.file_list], output, progress_callback=on_progress)
                 self.after(0, lambda: self.status_label.configure(text=f"Completado: {os.path.basename(output)}", text_color="green"))
                 self.after(0, lambda: self.progress_bar.set(1))
-            except Exception as e:
-                self.after(0, lambda: self.status_label.configure(text=f"Error: {e}", text_color="red"))
+            except Exception as ex:
+                error_msg = str(ex)
+                self.after(0, lambda err=error_msg: self.status_label.configure(text=f"Error: {err}", text_color="red"))
             self.after(0, lambda: self.btn_merge.configure(state="normal", text="Combinar PDFs"))
 
         threading.Thread(target=task, daemon=True).start()
@@ -278,8 +279,9 @@ class SplitPanel(customtkinter.CTkFrame):
                 self.after(0, lambda: self.status_label.configure(
                     text=f"Completado: {len(result)} archivos generados en {output_dir}", text_color="green"))
                 self.after(0, lambda: self.progress_bar.set(1))
-            except Exception as e:
-                self.after(0, lambda: self.status_label.configure(text=f"Error: {e}", text_color="red"))
+            except Exception as ex:
+                error_msg = str(ex)
+                self.after(0, lambda err=error_msg: self.status_label.configure(text=f"Error: {err}", text_color="red"))
             self.after(0, lambda: self.btn_split.configure(state="normal", text="Dividir PDF"))
 
         threading.Thread(target=task, daemon=True).start()

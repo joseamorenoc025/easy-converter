@@ -2,7 +2,6 @@
 Tests para el módulo de seguridad.
 Valida rutas, magic numbers y sanitización de nombres de archivo.
 """
-import pytest
 from pathlib import Path
 import tempfile
 import os

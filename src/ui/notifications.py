@@ -36,7 +36,6 @@ def notify_native(title, message):
     if sys.platform != "win32":
         return
     try:
-        from win32api import OutputDebugString
         import win32gui
         import win32con
 
@@ -52,7 +51,7 @@ def notify_native(title, message):
                 wc.hInstance = win32gui.GetModuleHandle(None)
                 try:
                     win32gui.RegisterClass(wc)
-                except:
+                except Exception:  # noqa: E722 - Windows API error handling
                     pass
                 self.hwnd = win32gui.CreateWindow(
                     wc.lpszClassName, "EasyConverter", win32con.WS_OVERLAPPEDWINDOW,

@@ -1,5 +1,4 @@
 import time
-import os
 import logging
 from pathlib import Path
 from watchdog.observers import Observer
@@ -35,7 +34,7 @@ class SmartFolderHandler(FileSystemEventHandler):
             try:
                 # Intentamos abrir el archivo en modo exclusivo (lectura/escritura)
                 # Si falla, es que el SO aún lo está escribiendo.
-                with open(path, 'rb+') as f:
+                with open(path, 'rb+'):
                     logger.debug(f"Archivo {path.name} está listo para procesar.")
                     return True
             except (IOError, OSError):

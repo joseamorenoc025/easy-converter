@@ -4,15 +4,14 @@ Verifica la inyección de dependencias y la lógica de negocio.
 """
 import pytest
 from pathlib import Path
-from unittest.mock import Mock, MagicMock, call
+from unittest.mock import Mock
 
-from src.core.controller import AppController, AppSettings
+from src.core.controller import AppController
 from src.core.interfaces import (
     IConverter,
     IQueueManager,
     IConfigManager,
     IWorkflowEngine,
-    IPlatformService,
     IViewCallback,
     ConversionJob,
     ConversionStatus,

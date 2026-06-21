@@ -1,7 +1,7 @@
 import threading
-from queue import Queue, Full
+from queue import Queue, Full, Empty
 from dataclasses import dataclass
-from typing import List, Callable, Optional
+from typing import List, Callable
 from pathlib import Path
 import logging
 
@@ -68,7 +68,7 @@ class ConversionQueue:
                 # Fallback por si acaso
                 self.secondary_queue.append(item)
                 item.status = "waiting_secondary"
-                item.message = f"En espera (cola llena)"
+                item.message = "En espera (cola llena)"
             
             if self.on_queue_update:
                 self.on_queue_update()
@@ -106,7 +106,7 @@ class ConversionQueue:
             try:
                 # Obtener item con timeout para permitir verificar la cola secundaria periódicamente
                 item = self.queue.get(timeout=0.5)
-            except:
+            except Empty:  # noqa: E722 - Timeout esperado para polling
                 continue  # Timeout, volver a verificar estado
             
             with self._lock:
