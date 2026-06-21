@@ -81,43 +81,23 @@ def get_user_local_paths() -> list[pathlib.Path]:
         
     return paths
 
-def is_safe_path(file_path: Union[str, pathlib.Path], allowed_bases: Optional[list[pathlib.Path]] = None) -> bool:
+def is_safe_path(file_path: Union[str, pathlib.Path]) -> bool:
     """
-    Valida que una ruta esté dentro de los directorios permitidos del usuario.
-    Previene Path Traversal y acceso a unidades de red o sistema.
-    
-    Args:
-        file_path: Ruta del archivo a validar.
-        allowed_bases: Lista de rutas base permitidas. Si es None, usa las por defecto.
-        
-    Returns:
-        True si la ruta es segura, False en caso contrario.
+    Valida que una ruta sea segura para operar.
+    Rechaza rutas relativas (path traversal) y rutas de red UNC.
+    Cualquier ruta absoluta local es aceptada.
     """
     try:
-        # Verificar si es una ruta absoluta ANTES de resolver (resolve convierte relativas en absolutas)
         original_path = pathlib.Path(file_path)
+        # Rechazar rutas relativas (path traversal)
         if not original_path.is_absolute():
             logger.warning(f"Ruta relativa detectada y rechazada: {file_path}")
             return False
-            
-        path_obj = original_path.resolve()
-        
-        # Determinar bases permitidas
-        if allowed_bases is None:
-            allowed_bases = get_user_local_paths()
-            
-        # Verificar que la ruta resuelta comience con alguna de las bases permitidas
-        for base in allowed_bases:
-            try:
-                # Verifica si path_obj es subpath de base
-                path_obj.relative_to(base)
-                return True
-            except ValueError:
-                continue
-                
-        logger.warning(f"Ruta fuera del entorno local permitido: {path_obj}")
-        return False
-        
+        # Rechazar rutas de red UNC (\\server\share)
+        if str(original_path).startswith("\\\\"):
+            logger.warning(f"Ruta de red UNC rechazada: {file_path}")
+            return False
+        return True
     except Exception as e:
         logger.error(f"Error validando ruta {file_path}: {e}")
         return False

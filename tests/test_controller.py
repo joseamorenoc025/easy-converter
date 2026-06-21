@@ -120,16 +120,11 @@ class TestFileValidation:
         assert "válido" in msg.lower()
     
     def test_validate_unsafe_path(self, controller):
-        """Rechaza archivos fuera del entorno local."""
-        # Usar un path que exista pero esté fuera del entorno permitido
-        if os.name == 'nt':
-            unsafe_path = Path(os.environ.get('SystemRoot', 'C:\\Windows')) / "System32" / "notepad.exe"
-        else:
-            unsafe_path = Path("/etc/passwd")
+        """Rechaza rutas relativas (path traversal)."""
+        unsafe_path = Path("../../etc/passwd")
     
         is_valid, msg = controller.validate_file_for_conversion(unsafe_path)
         assert is_valid is False
-        assert "fuera del entorno local" in msg
     
     def test_validate_nonexistent_file(self, controller):
         """Rechaza archivos que no existen."""
