@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from watchdog.observers.api import ObservedWatch
 from typing import Callable, Dict
 
 # Configuración de logging
@@ -71,7 +72,7 @@ class SmartWatcher:
     def __init__(self, callback: Callable[[Path], None]):
         self.callback = callback
         self.observer = Observer()
-        self.watch_paths = {}
+        self.watch_paths: Dict[str, ObservedWatch] = {}
 
     def add_watch(self, path: str):
         if path not in self.watch_paths:

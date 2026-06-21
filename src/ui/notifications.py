@@ -2,7 +2,7 @@ import sys
 import threading
 import customtkinter
 
-_NOTIFICATION_QUEUE = []
+_NOTIFICATION_QUEUE: list = []
 _NOTIFICATION_LOCK = threading.Lock()
 _NOTIFICATION_WINDOW = None
 

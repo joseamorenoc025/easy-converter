@@ -345,7 +345,9 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
                         if ocr_text.strip():
                             doc = Document(result)
                             doc.add_paragraph("")
-                            doc.add_paragraph("=== TEXTO EXTRAÍDO POR OCR ===").bold = True
+                            p = doc.add_paragraph("=== TEXTO EXTRAÍDO POR OCR ===")
+                            for run in p.runs:
+                                run.bold = True
                             for line in ocr_text.split("\n"):
                                 if line.strip():
                                     doc.add_paragraph(line.strip())

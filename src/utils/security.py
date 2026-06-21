@@ -4,7 +4,7 @@ Garantiza que las operaciones se realicen solo en entornos locales seguros
 y que los archivos correspondan a sus extensiones declaradas.
 """
 import pathlib
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 import logging
 
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ def get_user_local_paths() -> list[pathlib.Path]:
         
     return paths
 
-def is_safe_path(file_path: str | pathlib.Path, allowed_bases: Optional[list[pathlib.Path]] = None) -> bool:
+def is_safe_path(file_path: Union[str, pathlib.Path], allowed_bases: Optional[list[pathlib.Path]] = None) -> bool:
     """
     Valida que una ruta esté dentro de los directorios permitidos del usuario.
     Previene Path Traversal y acceso a unidades de red o sistema.
@@ -89,7 +89,7 @@ def is_safe_path(file_path: str | pathlib.Path, allowed_bases: Optional[list[pat
         logger.error(f"Error validando ruta {file_path}: {e}")
         return False
 
-def validate_file_magic(file_path: str | pathlib.Path, expected_extension: str) -> Tuple[bool, str]:
+def validate_file_magic(file_path: Union[str, pathlib.Path], expected_extension: str) -> Tuple[bool, str]:
     """
     Valida que el contenido real del archivo coincida con su extensión.
     
@@ -122,7 +122,7 @@ def validate_file_magic(file_path: str | pathlib.Path, expected_extension: str) 
             return True, "Archivo válido"
         else:
             # Caso especial: DOCX a veces tiene ligeras variaciones, pero PK es estándar
-            logger.warning(f"Firma inválida para {expected_extension}. Esperado: {expected_sig}, Obtenido: {header[:5]}")
+            logger.warning(f"Firma inválida para {expected_extension}. Esperado: {expected_sig!r}, Obtenido: {header[:5]!r}")
             return False, f"El archivo no parece ser un {expected_extension.upper()} válido (corrupto o tipo incorrecto)"
             
     except PermissionError:

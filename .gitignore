@@ -1,7 +1,7 @@
-```
 # Compiled Python files
 *.pyc
 __pycache__/
+.pytest_cache/
 
 # Dependencies
 venv/
@@ -27,4 +27,9 @@ htmlcov/
 # OS generated files
 .DS_Store
 Thumbs.db
-```
+
+# Build & distribution
+dist/
+build/easy_converter/
+build/tesseract-ocr-w64-setup-*.exe
+build/tess_*.txt

@@ -89,7 +89,7 @@ def extract_text_with_ocr(pdf_path: str, lang: str = "spa") -> str:
         for page_num in range(len(doc)):
             page = doc.load_page(page_num)
             pix = page.get_pixmap(dpi=300)
-            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
             text = pytesseract.image_to_string(img, lang=lang)
             text_parts.append(text)
     finally:

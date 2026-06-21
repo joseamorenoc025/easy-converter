@@ -108,7 +108,9 @@ class AppController:
             return False, f"El archivo no existe: {file_path}"
         
         # Validar magic numbers
-        is_valid, error_msg = validate_file_magic(file_path)
+        ext = file_path.suffix.lower()
+        expected = 'pdf' if ext == '.pdf' else ('docx' if ext in ['.docx', '.doc'] else '')
+        is_valid, error_msg = validate_file_magic(file_path, expected)
         if not is_valid:
             return False, error_msg
         

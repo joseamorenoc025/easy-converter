@@ -28,7 +28,7 @@ class ConversionQueue:
             on_queue_update: Callback cuando la cola cambia.
             max_size: Máximo número de items en procesamiento simultáneo (cola principal).
         """
-        self.queue = Queue(maxsize=max_size)
+        self.queue: Queue = Queue(maxsize=max_size)
         self.secondary_queue: List[QueueItem] = []  # Cola secundaria (espera)
         self.items: List[QueueItem] = []
         self.worker_func = worker_func

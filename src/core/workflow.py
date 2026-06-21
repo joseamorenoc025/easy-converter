@@ -116,7 +116,7 @@ class WorkflowManager:
                 return file_path
             
             try:
-                doc = Document(file_path)
+                doc = Document(str(file_path))
                 font_name = rule.params.get("font", "Arial")
                 font_size = rule.params.get("size", 11)
                 
@@ -135,7 +135,7 @@ class WorkflowManager:
                 for p in empty_paras:
                     p._element.getparent().remove(p._element)
                 
-                doc.save(file_path)
+                doc.save(str(file_path))
             except Exception as e:
                 print(f"Error sanitizando documento: {e}")
             
