@@ -19,13 +19,13 @@ class WindowsPlatformService(IPlatformService):
         # Intentar importar módulos de Windows
         if sys.platform == "win32":
             try:
-                import winreg
+                import winreg # noqa: F401
                 self._winreg_available = True
             except ImportError:
                 pass
             
             try:
-                import win32com.client
+                import win32com.client # noqa: F401
                 self._win32com_available = True
             except ImportError:
                 pass
