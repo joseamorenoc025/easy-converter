@@ -47,15 +47,25 @@ def get_user_local_paths() -> list[pathlib.Path]:
         # Carpetas comunes de usuario en Windows (Documentos, Escritorio, Descargas)
         if sys.platform == "win32":
             try:
-                # Preferir ctypes.SHGetKnownFolderPath para rutas redirigidas
-                from ctypes import windll, create_unicode_buffer, byref, wintypes
-                FOLDERID_Documents = "FDD39AD0-238F-46AF-ADB4-6C85480369C7"
-                FOLDERID_Desktop = "B4BFCC3A-DB2C-424C-B029-7FE99A87C641"
-                FOLDERID_Downloads = "374DE290-123F-4565-9164-39C4925E467B"
-                for fid in (FOLDERID_Documents, FOLDERID_Desktop, FOLDERID_Downloads):
-                    buf = create_unicode_buffer(wintypes.MAX_PATH)
-                    if windll.shell32.SHGetKnownFolderPath(create_unicode_buffer(fid), 0, None, byref(buf)) == 0:
-                        paths.append(pathlib.Path(buf.value).resolve())
+                from ctypes import windll, byref, wintypes
+                from uuid import UUID
+                # KNOWNFOLDERID como estructura GUID
+                class _GUID(wintypes.Structure):
+                    _fields_ = [("Data1", wintypes.DWORD), ("Data2", wintypes.WORD),
+                                ("Data3", wintypes.WORD), ("Data4", wintypes.BYTE * 8)]
+                known_folders = {
+                    "FDD39AD0-238F-46AF-ADB4-6C85480369C7",  # Documents
+                    "B4BFCC3A-DB2C-424C-B029-7FE99A87C641",  # Desktop
+                    "374DE290-123F-4565-9164-39C4925E467B",  # Downloads
+                }
+                for fid_str in known_folders:
+                    u = UUID(fid_str)
+                    guid = _GUID(u.time_low, u.time_mid, u.time_hi_version,
+                                 (wintypes.BYTE * 8)(*u.bytes[8:]))
+                    p_path = wintypes.LPWSTR()
+                    if windll.shell32.SHGetKnownFolderPath(byref(guid), 0, None, byref(p_path)) == 0:
+                        paths.append(pathlib.Path(p_path.value).resolve())
+                        windll.ole32.CoTaskMemFree(p_path)
             except Exception:
                 # Fallback: rutas estándar bajo %USERPROFILE%
                 fallbacks = ["Documents", "Desktop", "Downloads"]

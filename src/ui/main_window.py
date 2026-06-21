@@ -74,7 +74,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
     def on_file_detected(self, file_path: Path):
         # Validar seguridad de la ruta
         if not is_safe_path(file_path):
-            self.notifications.error(f"Archivo fuera del entorno local permitido: {file_path}")
+            self.notifications.error("Archivo no permitido", f"{file_path}")
             return
         
         # Validar tipo de archivo real
@@ -83,9 +83,9 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         if expected_type:
             is_valid, msg = validate_file_magic(file_path, expected_type)
             if not is_valid:
-                self.notifications.error(f"Archivo inválido: {msg}")
+                self.notifications.error("Archivo inválido", msg)
                 return
-        
+            
         # Encontrar qué perfil disparó esto
         for profile in self.workflow_manager.profiles:
             if profile.is_active and profile.watch_path:
@@ -269,7 +269,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         
         # Validar seguridad de la ruta
         if not is_safe_path(path):
-            self.notifications.error(f"Archivo fuera del entorno local permitido: {path}")
+            self.notifications.error("Archivo no permitido", f"{path}")
             return
         
         ext = path.suffix.lower()
@@ -279,7 +279,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         if expected_type:
             is_valid, msg = validate_file_magic(path, expected_type)
             if not is_valid:
-                self.notifications.error(f"Archivo inválido: {msg}")
+                self.notifications.error("Archivo inválido", msg)
                 return
         
         # Actualizar vista previa si es PDF
@@ -297,7 +297,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             use_ocr = (mode == "pdf2word" and self.check_ocr.get())
             success, message = self.queue_manager.add_item(path, mode, use_ocr=use_ocr)
             if not success:
-                self.notifications.error(f"No se pudo añadir a la cola: {message}")
+                self.notifications.error("Error en cola", f"No se pudo añadir: {message}")
 
     def update_preview(self, pdf_path):
         try:
