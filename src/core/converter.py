@@ -1,4 +1,5 @@
 import os
+import gc
 import logging
 import pythoncom
 import fitz  # PyMuPDF
@@ -73,8 +74,14 @@ class EasyConverter:
         """
         Convierte un archivo DOCX a PDF manejando el contexto COM de Windows y fases de progreso.
         """
-        # Inicialización obligatoria de COM para entornos Multithreading
-        pythoncom.CoInitialize()
+        # Inicialización COM para entornos Multithreading
+        com_initialized = False
+        try:
+            pythoncom.CoInitializeEx(pythoncom.COINIT_MULTITHREADED)
+            com_initialized = True
+        except RuntimeError:
+            # COM ya inicializado en este hilo, continuar
+            pass
         try:
             docx_path_obj = Path(docx_path)
             if not docx_path_obj.exists():
@@ -112,7 +119,6 @@ class EasyConverter:
                 progress_tracker.error(e)
             raise e
         finally:
-            import gc
             gc.collect()
-            # Liberar recursos COM para evitar fugas de memoria o bloqueos de hilos
-            pythoncom.CoUninitialize()
+            if com_initialized:
+                pythoncom.CoUninitialize()

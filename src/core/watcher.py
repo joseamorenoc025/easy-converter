@@ -29,7 +29,7 @@ class SmartFolderHandler(FileSystemEventHandler):
         Espera activa con backoff para asegurar que el archivo no esté bloqueado
         por el sistema operativo (útil para archivos grandes o descargas).
         """
-        start_time = time.time()
+        start_time = time.monotonic()
         retries = 0
         while time.time() - start_time < timeout:
             try:
@@ -55,9 +55,9 @@ class SmartFolderHandler(FileSystemEventHandler):
             return
 
         if ext in ['.pdf', '.docx', '.doc']:
-            # Debounce: Evitar disparos duplicados en menos de 1 segundo
-            now = time.time()
-            if file_path_str in self.last_triggered and now - self.last_triggered[file_path_str] < 1.0:
+            # Debounce: Evitar disparos duplicados (ventana de 2s con time.monotonic)
+            now = time.monotonic()
+            if file_path_str in self.last_triggered and now - self.last_triggered[file_path_str] < 2.0:
                 return
             
             self.last_triggered[file_path_str] = now

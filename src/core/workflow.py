@@ -5,6 +5,8 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from docx import Document
+from docx.shared import Pt
 
 class RuleType(Enum):
     RENAME = "rename"
@@ -114,9 +116,6 @@ class WorkflowManager:
                 return file_path
             
             try:
-                from docx import Document
-                from docx.shared import Pt
-                
                 doc = Document(file_path)
                 font_name = rule.params.get("font", "Arial")
                 font_size = rule.params.get("size", 11)
@@ -131,10 +130,10 @@ class WorkflowManager:
                         run.font.name = font_name
                         run.font.size = Pt(font_size)
                 
-                # Eliminar párrafos vacíos
-                for p in list(doc.paragraphs):
-                    if not p.text.strip():
-                        p._element.getparent().remove(p._element)
+                # Eliminar párrafos vacíos (colección separada para evitar corrupción del árbol XML)
+                empty_paras = [p for p in doc.paragraphs if not p.text.strip()]
+                for p in empty_paras:
+                    p._element.getparent().remove(p._element)
                 
                 doc.save(file_path)
             except Exception as e:

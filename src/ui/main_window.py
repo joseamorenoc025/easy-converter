@@ -1,8 +1,11 @@
 import customtkinter
 import os
+import re
 import threading
 from pathlib import Path
-from tkinterdnd2 import TkinterDnD, DND_FILES
+from tkinterdnd2 import TkinterDnD
+from PIL import Image
+import fitz
 from core.converter import EasyConverter
 from core.error_handler import ErrorHandler
 from core.progress import ConversionProgress
@@ -11,11 +14,16 @@ from core.file_manager import PathManager
 from core.workflow import WorkflowManager, WorkflowProfile
 from core.watcher import SmartWatcher
 from ui.workflow_panel import WorkflowPanel
+from ui.pdf_operations import MergePanel, SplitPanel
+from ui.themes import ThemeManager
+from ui.components import FileDropZone
+from ui.notifications import NotificationManager
 from utils.config import ConfigManager
+from utils.context_menu import add_context_menu
+from utils.pdf_tools import extract_text_with_ocr
 from tkinter import messagebox
 
 # Configuración estética global
-customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("blue")
 
 class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
@@ -28,9 +36,11 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.geometry("800x650")
         self.resizable(True, True)
         self.minsize(700, 550)
+        self._set_app_icon()
 
         # Inicializar Componentes Core
         self.config_manager = ConfigManager()
+        ThemeManager.apply(self.config_manager.get("theme", "dark"))
         self.path_manager = PathManager(self.config_manager)
         self.error_handler = ErrorHandler()
         self.workflow_manager = WorkflowManager(self.config_manager)
@@ -40,11 +50,22 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             on_queue_update=self.update_queue_ui
         )
 
+        # Notificaciones
+        self.notifications = NotificationManager(master=self)
+
         # Variables de estado
         self.conversion_mode = "pdf2word"
 
         self.setup_ui()
         self.setup_watchers()
+
+    def _set_app_icon(self):
+        icon_path = Path(__file__).parent.parent / "assets" / "icon.ico"
+        if icon_path.exists():
+            try:
+                self.iconbitmap(str(icon_path))
+            except Exception:
+                pass
 
     def setup_watchers(self):
         self.watcher.start()
@@ -95,7 +116,24 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         
         self.check_open = customtkinter.CTkCheckBox(self.sidebar, text="Abrir al finalizar", command=self.save_settings)
         if self.config_manager.get("open_folder_on_finish"): self.check_open.select()
-        self.check_open.pack(pady=20, padx=20, anchor="w")
+        self.check_open.pack(pady=5, padx=20, anchor="w")
+
+        self.check_ocr = customtkinter.CTkCheckBox(self.sidebar, text="OCR en PDF→Word (lento)", command=self.save_settings)
+        if self.config_manager.get("use_ocr"): self.check_ocr.select()
+        self.check_ocr.pack(pady=5, padx=20, anchor="w")
+
+        self.theme_label = customtkinter.CTkLabel(self.sidebar, text="Tema:", font=customtkinter.CTkFont(size=12, weight="bold"))
+        self.theme_label.pack(pady=(15, 0), padx=20, anchor="w")
+
+        current_theme = self.config_manager.get("theme", "dark")
+        self.theme_map = {ThemeManager.get_theme_label(k): k for k in ThemeManager.get_theme_names()}
+        self.theme_var = customtkinter.StringVar(value=ThemeManager.get_theme_label(current_theme))
+        self.theme_menu = customtkinter.CTkOptionMenu(
+            self.sidebar, variable=self.theme_var,
+            values=list(self.theme_map.keys()),
+            command=self.change_theme, width=160
+        )
+        self.theme_menu.pack(pady=5, padx=20)
 
         self.btn_context_menu = customtkinter.CTkButton(self.sidebar, text="Añadir a Menú Contextual", command=self.register_context_menu, height=30, fg_color="gray30")
         self.btn_context_menu.pack(pady=10, padx=20, side="bottom")
@@ -104,11 +142,13 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.main_frame = customtkinter.CTkFrame(self, fg_color="transparent")
         self.main_frame.pack(side="right", fill="both", expand=True, padx=20)
 
-        # Tabview para separar Conversión Manual y Flujos
+        # Tabview para separar Conversión Manual, Flujos, Merge y Split
         self.tabview = customtkinter.CTkTabview(self.main_frame)
         self.tabview.pack(fill="both", expand=True, pady=10)
         self.tabview.add("Conversión Manual")
         self.tabview.add("Flujos de Trabajo")
+        self.tabview.add("Combinar PDFs")
+        self.tabview.add("Dividir PDF")
 
         # --- TAB: Conversión Manual ---
         self.manual_tab = self.tabview.tab("Conversión Manual")
@@ -129,17 +169,9 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.btn_word2pdf = customtkinter.CTkButton(self.mode_frame, text="Word a PDF", command=lambda: self.set_mode("word2pdf"), width=120, fg_color="gray30")
         self.btn_word2pdf.grid(row=0, column=1, padx=10)
 
-        # Drop Zone
-        self.drop_frame = customtkinter.CTkFrame(self.left_manual, height=100, corner_radius=15)
-        self.drop_frame.pack(pady=10, fill="x")
-        self.drop_frame.pack_propagate(False)
-
-        self.drop_label = customtkinter.CTkLabel(self.drop_frame, text="Arrastra archivos aquí o haz clic")
-        self.drop_label.pack(expand=True)
-        self.drop_frame.bind("<Button-1>", lambda e: self.select_files_dialog())
-        self.drop_label.bind("<Button-1>", lambda e: self.select_files_dialog())
-        self.drop_frame.drop_target_register(DND_FILES)
-        self.drop_frame.dnd_bind('<<Drop>>', self.handle_drop)
+        # Drop Zone (componente reutilizable)
+        self.drop_zone = FileDropZone(self.left_manual, on_drop=self.process_selected_file)
+        self.drop_zone.pack(pady=10, fill="x")
 
         # Preview Panel (Nuevo)
         self.preview_frame = customtkinter.CTkFrame(self.manual_content, width=200, corner_radius=10)
@@ -162,6 +194,16 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.workflow_panel = WorkflowPanel(self.workflow_tab, self.workflow_manager, on_watcher_change=self.handle_watcher_change)
         self.workflow_panel.pack(fill="both", expand=True)
 
+        # --- TAB: Combinar PDFs ---
+        self.merge_tab = self.tabview.tab("Combinar PDFs")
+        self.merge_panel = MergePanel(self.merge_tab)
+        self.merge_panel.pack(fill="both", expand=True)
+
+        # --- TAB: Dividir PDF ---
+        self.split_tab = self.tabview.tab("Dividir PDF")
+        self.split_panel = SplitPanel(self.split_tab)
+        self.split_panel.pack(fill="both", expand=True)
+
         # Footer
         self.footer = customtkinter.CTkFrame(self.main_frame, fg_color="transparent")
         self.footer.pack(fill="x", pady=10)
@@ -172,9 +214,27 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.status_global = customtkinter.CTkLabel(self.footer, text="Listo")
         self.status_global.pack(side="right")
 
+        self.setup_tooltips()
+
+    def setup_tooltips(self):
+        from ui.components import ToolTip
+        ToolTip(self.btn_pdf2word, "Convertir archivos PDF a formato Word (DOCX)")
+        ToolTip(self.btn_word2pdf, "Convertir archivos Word (DOCX) a formato PDF")
+        ToolTip(self.check_open, "Abrir la carpeta contenedora al finalizar la conversión")
+        ToolTip(self.check_ocr, "Extraer texto de imágenes en PDF usando OCR (requiere Tesseract)")
+        ToolTip(self.clear_button, "Eliminar de la lista los elementos completados")
+        ToolTip(self.btn_context_menu, "Agregar opciones 'Convertir a Word/PDF' al menú contextual de Windows")
+
     def save_settings(self):
         self.config_manager.set("output_mode", self.out_mode_var.get())
         self.config_manager.set("open_folder_on_finish", self.check_open.get())
+        self.config_manager.set("use_ocr", self.check_ocr.get())
+
+    def change_theme(self, display_name):
+        theme_key = self.theme_map.get(display_name)
+        if theme_key:
+            ThemeManager.apply(theme_key)
+            self.config_manager.set("theme", theme_key)
 
     def select_custom_folder(self):
         folder = customtkinter.filedialog.askdirectory()
@@ -190,17 +250,6 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         )
         for path in file_paths:
             self.process_selected_file(path)
-
-    def handle_drop(self, event):
-        data = event.data
-        import re
-        # Limpia llaves y divide correctamente (soporta espacios en rutas de Windows)
-        paths = re.findall(r'\{([^}]+)\}|(\S+)', data)
-        file_paths = [Path(p[0] if p[0] else p[1]) for p in paths]
-        
-        for path in file_paths:
-            if path.exists():
-                self.process_selected_file(str(path))
 
     def process_selected_file(self, file_path):
         path = Path(file_path)
@@ -218,11 +267,10 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             mode = 'word2pdf'
             
         if mode:
-            self.queue_manager.add_item(path, mode)
+            use_ocr = (mode == "pdf2word" and self.check_ocr.get())
+            self.queue_manager.add_item(path, mode, use_ocr=use_ocr)
 
     def update_preview(self, pdf_path):
-        import fitz
-        from PIL import Image
         try:
             doc = fitz.open(str(pdf_path))
             page = doc.load_page(0)
@@ -259,6 +307,22 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         try:
             if item.mode == "pdf2word":
                 success, result = EasyConverter.pdf_to_docx(item.file_path, output_path=output_path, progress_tracker=tracker)
+                if success and item.use_ocr:
+                    item.message = "Ejecutando OCR..."
+                    self.update_queue_ui()
+                    try:
+                        from docx import Document
+                        ocr_text = extract_text_with_ocr(str(item.file_path), lang="spa")
+                        if ocr_text.strip():
+                            doc = Document(result)
+                            doc.add_paragraph("")
+                            doc.add_paragraph("=== TEXTO EXTRAÍDO POR OCR ===").bold = True
+                            for line in ocr_text.split("\n"):
+                                if line.strip():
+                                    doc.add_paragraph(line.strip())
+                            doc.save(result)
+                    except Exception as ocr_err:
+                        print(f"Error en OCR: {ocr_err}")
             else:
                 success, result = EasyConverter.docx_to_pdf(item.file_path, output_path=output_path, progress_tracker=tracker)
             
@@ -272,13 +336,19 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
                 else:
                     item.result_path = result
                 
+                self.after(0, lambda: self.notifications.success(
+                    "Conversión exitosa",
+                    f"{item.file_path.name} → {Path(item.result_path).name}"
+                ))
                 if self.config_manager.get("open_folder_on_finish"):
                     self.path_manager.open_in_explorer(Path(item.result_path))
         except Exception as e:
+            self.after(0, lambda f=item.file_path.name: self.notifications.error(
+                "Error de conversión", f"{f}: {str(e)[:100]}"
+            ))
             raise e
 
     def register_context_menu(self):
-        from utils.context_menu import add_context_menu
         try:
             add_context_menu()
             messagebox.showinfo("Éxito", "Menú contextual añadido correctamente.\nAhora puedes hacer clic derecho en archivos PDF/DOCX.")
@@ -291,6 +361,8 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
     def _render_queue(self):
         items = self.queue_manager.get_all_items()
         current_ids = [id(item) for item in items]
+
+        # Eliminar widgets de items que ya no existen
         for item_id in list(self.item_widgets.keys()):
             if item_id not in current_ids:
                 self.item_widgets[item_id]['frame'].destroy()
@@ -310,18 +382,28 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
                 status_label.pack(side="left", padx=10)
                 open_btn = customtkinter.CTkButton(frame, text="Abrir", width=60, height=24, command=lambda p=item: self.path_manager.open_in_explorer(Path(p.result_path)) if p.result_path else None, state="disabled")
                 open_btn.pack(side="right", padx=10)
-                self.item_widgets[item_id] = {'frame': frame, 'progress': progress_bar, 'status': status_label, 'open_btn': open_btn}
+                self.item_widgets[item_id] = {
+                    'frame': frame, 'progress': progress_bar, 'status': status_label,
+                    'open_btn': open_btn, '_last_msg': '', '_last_status': '', '_last_progress': -1
+                }
 
             widgets = self.item_widgets[item_id]
-            widgets['progress'].set(item.progress / 100)
-            widgets['status'].configure(text=item.message)
-            if item.status == "success":
-                widgets['status'].configure(text_color="green")
-                widgets['open_btn'].configure(state="normal")
-            elif item.status == "failed":
-                widgets['status'].configure(text_color="red")
-            elif item.status == "running":
-                widgets['status'].configure(text_color="orange")
+            # Solo actualizar si hubo cambio real
+            if item.progress != widgets['_last_progress']:
+                widgets['progress'].set(item.progress / 100)
+                widgets['_last_progress'] = item.progress
+            if item.message != widgets['_last_msg']:
+                widgets['status'].configure(text=item.message)
+                widgets['_last_msg'] = item.message
+            if item.status != widgets['_last_status']:
+                if item.status == "success":
+                    widgets['status'].configure(text_color="green")
+                    widgets['open_btn'].configure(state="normal")
+                elif item.status == "failed":
+                    widgets['status'].configure(text_color="red")
+                elif item.status == "running":
+                    widgets['status'].configure(text_color="orange")
+                widgets['_last_status'] = item.status
 
         running = sum(1 for i in items if i.status == "running")
         self.status_global.configure(text=f"Procesando {running}..." if running else "Listo", text_color="orange" if running else "gray")

@@ -1,28 +1,101 @@
 import sys
 import os
 
-# Añadir el directorio actual al path para facilitar importaciones
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from ui.main_window import App
+from utils.config import ConfigManager
+from core.error_handler import WordMissingError
+from utils.word_checker import WordChecker
+from tkinter import messagebox
+
+
+def _first_run_setup(parent):
+    config = ConfigManager()
+    if not config.get("first_run_complete", False):
+        messages = []
+        try:
+            WordChecker.check_word_or_fail()
+        except WordMissingError:
+            messages.append(
+                "• Microsoft Word no está instalado.\n"
+                "  La conversión de Word a PDF (DOCX→PDF) no estará disponible.\n"
+                "  La conversión PDF a Word sí funciona sin Word."
+            )
+        except Exception:
+            messages.append(
+                "• No se pudo verificar Microsoft Word.\n"
+                "  Si no está instalado, la conversión Word→PDF no funcionará."
+            )
+
+        try:
+            import pytesseract
+            pytesseract.get_tesseract_version()
+        except Exception:
+            install_tesseract = messagebox.askyesno(
+                "Easy Converter - Tesseract OCR",
+                "Tesseract OCR no está instalado.\n\n"
+                "Esta herramienta es necesaria para la función OCR "
+                "(extraer texto de imágenes en PDF).\n\n"
+                "¿Quieres descargar e instalar Tesseract ahora?\n\n"
+                "Se abrirá el navegador en la página de descarga oficial."
+            )
+            if install_tesseract:
+                import webbrowser
+                webbrowser.open("https://github.com/UB-Mannheim/tesseract/wiki")
+                messagebox.showinfo(
+                    "Easy Converter",
+                    "Descarga e instala Tesseract desde la página abierta.\n\n"
+                    "Una vez instalado, reinicia Easy Converter para "
+                    "que la opción OCR esté disponible."
+                )
+
+        if messages:
+            msg = "Bienvenido a Easy Converter v2.0\n\n" + \
+                  "Se detectaron los siguientes puntos a tener en cuenta:\n\n" + \
+                  "\n\n".join(messages) + \
+                  "\n\nPuedes cambiar estas opciones más tarde desde la aplicación."
+
+            messagebox.showinfo("Easy Converter - Primer inicio", msg)
+
+        from utils.context_menu import add_context_menu
+        try:
+            add_context_menu()
+        except Exception:
+            pass
+
+        config.set("first_run_complete", True)
+
 
 def main():
-    # Manejo de argumentos para Menú Contextual
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--pdf2word", type=str, help="Convertir PDF a Word vía CLI")
     parser.add_argument("--word2pdf", type=str, help="Convertir Word a PDF vía CLI")
+    parser.add_argument("--setup-context-menu", action="store_true", help="Registrar menú contextual")
+    parser.add_argument("--remove-context-menu", action="store_true", help="Eliminar menú contextual")
     args, unknown = parser.parse_known_args()
+
+    if args.setup_context_menu:
+        from utils.context_menu import add_context_menu
+        add_context_menu()
+        return
+    if args.remove_context_menu:
+        from utils.context_menu import remove_context_menu
+        remove_context_menu()
+        return
 
     app = App()
 
-    # Si se recibe un archivo por argumento, procesarlo inmediatamente
+    _first_run_setup(app)
+
     if args.pdf2word:
         app.after(1000, lambda: app.process_selected_file(args.pdf2word))
     elif args.word2pdf:
         app.after(1000, lambda: app.process_selected_file(args.word2pdf))
 
     app.mainloop()
+
 
 if __name__ == "__main__":
     main()

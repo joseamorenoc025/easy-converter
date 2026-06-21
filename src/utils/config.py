@@ -1,5 +1,6 @@
 import json
 import os
+import threading
 from pathlib import Path
 from appdirs import user_config_dir
 
@@ -11,6 +12,7 @@ class ConfigManager:
         self.config_dir = Path(user_config_dir(app_name, "GeminiCLI"))
         self.config_dir.mkdir(parents=True, exist_ok=True)
         self.config_file = self.config_dir / "config.json"
+        self._lock = threading.Lock()
         self.config = self._load_config()
 
     def _load_config(self):
@@ -24,11 +26,13 @@ class ConfigManager:
 
     def _get_defaults(self):
         return {
-            "output_mode": "same_folder", # same_folder, subfolder, custom
+            "output_mode": "same_folder",
             "custom_path": "",
             "recent_paths": [],
             "open_folder_on_finish": True,
             "theme": "dark",
+            "use_ocr": False,
+            "first_run_complete": False,
             "workflow_profiles": []
         }
 
@@ -40,11 +44,12 @@ class ConfigManager:
         self._save_config()
 
     def _save_config(self):
-        try:
-            with open(self.config_file, 'w', encoding='utf-8') as f:
-                json.dump(self.config, f, indent=4)
-        except Exception as e:
-            print(f"Error guardando configuración: {e}")
+        with self._lock:
+            try:
+                with open(self.config_file, 'w', encoding='utf-8') as f:
+                    json.dump(self.config, f, indent=4)
+            except Exception as e:
+                print(f"Error guardando configuración: {e}")
 
     def add_recent_path(self, path):
         recent = self.get("recent_paths", [])
