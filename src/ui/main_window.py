@@ -336,7 +336,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         try:
             if item.mode == "pdf2word":
                 success, result = EasyConverter.pdf_to_docx(item.file_path, output_path=output_path, progress_tracker=tracker)
-                if success and item.use_ocr:
+                if success and item.use_ocr and result:
                     item.message = "Ejecutando OCR..."
                     self.update_queue_ui()
                     try:

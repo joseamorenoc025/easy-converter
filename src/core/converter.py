@@ -1,11 +1,11 @@
 import gc
 import logging
 import pythoncom
+import win32com.client
 import fitz  # PyMuPDF
 from pathlib import Path
 from typing import Optional, Tuple
 from pdf2docx import Converter
-from docx2pdf import convert as word_to_pdf_conv
 from core.error_handler import PermissionDeniedError
 from utils.word_checker import WordChecker
 
@@ -74,13 +74,13 @@ class EasyConverter:
         """
         Convierte un archivo DOCX a PDF manejando el contexto COM de Windows y fases de progreso.
         """
-        # Inicialización COM para entornos Multithreading
         com_initialized = False
+        word = None
+        doc = None
         try:
             pythoncom.CoInitializeEx(pythoncom.COINIT_MULTITHREADED)
             com_initialized = True
         except RuntimeError:
-            # COM ya inicializado en este hilo, continuar
             pass
         try:
             docx_path_obj = Path(docx_path)
@@ -94,32 +94,53 @@ class EasyConverter:
 
             pdf_path = Path(output_path) if output_path else docx_path_obj.with_suffix('.pdf')
 
-            # Verificar permisos en destino
             if pdf_path.exists():
                 try:
                     with open(pdf_path, 'a'):
-                        pass  # Verificar acceso de escritura
+                        pass
                 except PermissionError:
                     raise PermissionDeniedError(f"No se puede escribir en {pdf_path}. ¿Está abierto?")
 
             if progress_tracker:
                 progress_tracker.update(40, "Fase 2/3: Renderizando con Microsoft Word...")
 
-            # Conversión real
-            word_to_pdf_conv(str(docx_path_obj), str(pdf_path))
-            
+            # Conversión directa con win32com (sin docx2pdf que causa freezes)
+            word = win32com.client.Dispatch("Word.Application")
+            word.Visible = False
+            word.DisplayAlerts = False
+            word.ScreenUpdating = False
+
+            doc = word.Documents.Open(str(docx_path_obj))
+            doc.SaveAs(str(pdf_path), FileFormat=17)  # 17 = wdFormatPDF
+            doc.Close(False)
+
             if progress_tracker:
                 progress_tracker.update(100, "Fase 3/3: ¡Conversión finalizada!")
                 progress_tracker.complete(str(pdf_path))
-                
+
             return True, str(pdf_path)
-            
+
         except Exception as e:
             logger.error(f"Error en docx_to_pdf: {str(e)}")
             if progress_tracker:
                 progress_tracker.error(e)
             raise e
         finally:
+            if doc is not None:
+                try:
+                    doc.Close(False)
+                except Exception:
+                    pass
+                doc = None
+            if word is not None:
+                try:
+                    word.Quit()
+                except Exception:
+                    pass
+                word = None
             gc.collect()
             if com_initialized:
-                pythoncom.CoUninitialize()
+                try:
+                    pythoncom.CoUninitialize()
+                except Exception:
+                    pass

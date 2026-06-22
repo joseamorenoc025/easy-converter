@@ -71,7 +71,6 @@ class TestEasyConverter:
 
     @patch("core.converter.pythoncom")
     @patch("core.converter.WordChecker.check_word_or_fail")
-    @patch("core.converter.word_to_pdf_conv")
-    def test_docx_to_pdf_file_not_found(self, mock_conv, mock_check_word, mock_pythoncom):
+    def test_docx_to_pdf_file_not_found(self, mock_check_word, mock_pythoncom):
         with pytest.raises(FileNotFoundError):
             EasyConverter.docx_to_pdf("/no/exist/file.docx")

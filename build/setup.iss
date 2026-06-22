@@ -13,7 +13,7 @@ AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
-DefaultDirName={autopf64}\{#MyAppName}
+DefaultDirName={localappdata}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir=..\dist
@@ -21,7 +21,7 @@ OutputBaseFilename=EasyConverter-Installer-{#MyAppVersion}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
-PrivilegesRequired=admin
+PrivilegesRequired=lowest
 ArchitecturesInstallIn64BitMode=x64compatible
 SetupIconFile=..\assets\icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
@@ -53,22 +53,23 @@ Name: "{group}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Registry]
-; Asociación de archivos .pdf
-Root: "HKCR"; Subkey: ".pdf\OpenWithProgids\EasyConverter.PDF"; ValueType: none; Flags: createvalueifdoesntexist
-Root: "HKCR"; Subkey: "EasyConverter.PDF"; ValueType: string; ValueData: "Easy Converter PDF"; Flags: createvalueifdoesntexist
-Root: "HKCR"; Subkey: "EasyConverter.PDF\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},0"
-Root: "HKCR"; Subkey: "EasyConverter.PDF\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --pdf2word ""%1"""
+; Asociación de archivos .pdf (por usuario, sin admin)
+Root: "HKCU"; Subkey: "Software\Classes\.pdf\OpenWithProgids\EasyConverter.PDF"; ValueType: none; Flags: createvalueifdoesntexist
+Root: "HKCU"; Subkey: "Software\Classes\EasyConverter.PDF"; ValueType: string; ValueData: "Easy Converter PDF"; Flags: createvalueifdoesntexist
+Root: "HKCU"; Subkey: "Software\Classes\EasyConverter.PDF\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},0"
+Root: "HKCU"; Subkey: "Software\Classes\EasyConverter.PDF\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --pdf2word ""%1"""
 
 ; Asociación de archivos .docx
-Root: "HKCR"; Subkey: ".docx\OpenWithProgids\EasyConverter.DOCX"; ValueType: none; Flags: createvalueifdoesntexist
-Root: "HKCR"; Subkey: "EasyConverter.DOCX"; ValueType: string; ValueData: "Easy Converter DOCX"; Flags: createvalueifdoesntexist
-Root: "HKCR"; Subkey: "EasyConverter.DOCX\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},0"
-Root: "HKCR"; Subkey: "EasyConverter.DOCX\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --word2pdf ""%1"""
+Root: "HKCU"; Subkey: "Software\Classes\.docx\OpenWithProgids\EasyConverter.DOCX"; ValueType: none; Flags: createvalueifdoesntexist
+Root: "HKCU"; Subkey: "Software\Classes\EasyConverter.DOCX"; ValueType: string; ValueData: "Easy Converter DOCX"; Flags: createvalueifdoesntexist
+Root: "HKCU"; Subkey: "Software\Classes\EasyConverter.DOCX\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},0"
+Root: "HKCU"; Subkey: "Software\Classes\EasyConverter.DOCX\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --word2pdf ""%1"""
 
 ; Asociación de archivos .doc
-Root: "HKCR"; Subkey: ".doc\OpenWithProgids\EasyConverter.DOC"; ValueType: none; Flags: createvalueifdoesntexist
-Root: "HKCR"; Subkey: "EasyConverter.DOC"; ValueType: string; ValueData: "Easy Converter DOC"; Flags: createvalueifdoesntexist
-Root: "HKCR"; Subkey: "EasyConverter.DOC\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --word2pdf ""%1"""
+Root: "HKCU"; Subkey: "Software\Classes\.doc\OpenWithProgids\EasyConverter.DOC"; ValueType: none; Flags: createvalueifdoesntexist
+Root: "HKCU"; Subkey: "Software\Classes\EasyConverter.DOC"; ValueType: string; ValueData: "Easy Converter DOC"; Flags: createvalueifdoesntexist
+Root: "HKCU"; Subkey: "Software\Classes\EasyConverter.DOC\DefaultIcon"; ValueType: string; ValueData: "{app}\{#MyAppExeName},0"
+Root: "HKCU"; Subkey: "Software\Classes\EasyConverter.DOC\shell\open\command"; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --word2pdf ""%1"""
 
 ; Menú contextual (clic derecho)
 Root: "HKCU"; Subkey: "Software\Classes\SystemFileAssociations\.pdf\shell\EasyConverter"; Tasks: contextmenu; ValueType: string; ValueData: "Convertir a Word"
