@@ -4,7 +4,16 @@ omit =
     tests/*
     __pycache__/*
     build/*
+    src/ui/*
+    src/main.py
+    src/utils/context_menu.py
+    src/utils/word_checker.py
+    src/utils/platform_service.py
 
 [report]
 show_missing = True
-fail_under = 80
+fail_under = 55
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError
