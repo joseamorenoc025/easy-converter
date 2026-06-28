@@ -50,7 +50,7 @@ def get_user_local_paths() -> list[pathlib.Path]:
                 from ctypes import windll, byref, wintypes
                 from uuid import UUID
                 # KNOWNFOLDERID como estructura GUID
-                class _GUID(wintypes.Structure):
+                class _GUID(wintypes.Structure):  # type: ignore[name-defined]
                     _fields_ = [("Data1", wintypes.DWORD), ("Data2", wintypes.WORD),
                                 ("Data3", wintypes.WORD), ("Data4", wintypes.BYTE * 8)]
                 known_folders = {
