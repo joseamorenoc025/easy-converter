@@ -141,6 +141,13 @@ class ConversionQueue:
         if self.on_queue_update:
             self.on_queue_update()
 
+    def remove_item(self, item):
+        with self._lock:
+            if item in self.items:
+                self.items.remove(item)
+        if self.on_queue_update:
+            self.on_queue_update()
+
     def clear_completed(self):
         with self._lock:
             # Mantener solo items pendientes, en ejecución o en cola secundaria

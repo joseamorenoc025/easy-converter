@@ -415,9 +415,11 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
                 status_label.pack(side="left", padx=10)
                 open_btn = customtkinter.CTkButton(frame, text="Abrir", width=60, height=24, command=lambda p=item: self.path_manager.open_in_explorer(Path(p.result_path)) if p.result_path else None, state="disabled")
                 open_btn.pack(side="right", padx=10)
+                remove_btn = customtkinter.CTkButton(frame, text="✕", width=28, height=24, fg_color="transparent", text_color="gray", hover_color="#e74c3c", command=lambda i=item, iid=item_id: self._remove_queue_item(i, iid))
+                remove_btn.pack(side="right", padx=(0, 5))
                 self.item_widgets[item_id] = {
                     'frame': frame, 'progress': progress_bar, 'status': status_label,
-                    'open_btn': open_btn, '_last_msg': '', '_last_status': '', '_last_progress': -1
+                    'open_btn': open_btn, 'remove_btn': remove_btn, '_last_msg': '', '_last_status': '', '_last_progress': -1
                 }
 
             widgets = self.item_widgets[item_id]
@@ -440,6 +442,12 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
 
         running = sum(1 for i in items if i.status == "running")
         self.status_global.configure(text=f"Procesando {running}..." if running else "Listo", text_color="orange" if running else "gray")
+
+    def _remove_queue_item(self, item, item_id):
+        self.queue_manager.remove_item(item)
+        if item_id in self.item_widgets:
+            self.item_widgets[item_id]['frame'].destroy()
+            del self.item_widgets[item_id]
 
 if __name__ == "__main__":
     app = App()
