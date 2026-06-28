@@ -71,6 +71,7 @@ if (-not $SkipInstaller) {
     $isccPaths = @(
         "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
         "C:\Program Files\Inno Setup 6\ISCC.exe",
+        "C:\Users\$env:USERNAME\AppData\Local\Programs\Inno Setup 6\ISCC.exe",
         "C:\Program Files (x86)\Inno Setup\ISCC.exe",
         "C:\Program Files\Inno Setup\ISCC.exe"
     )
