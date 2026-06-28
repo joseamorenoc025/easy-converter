@@ -13,16 +13,15 @@ from core.platform_adapter import PlatformAdapter
 from core.view_adapter import ViewAdapter
 from core.error_handler import ErrorHandler
 from core.progress import ConversionProgress
-from core.queue_manager import ConversionQueue, QueueItem
+from core.queue_manager import QueueItem
 from core.file_manager import PathManager
-from core.workflow import WorkflowManager, WorkflowProfile
+from core.workflow import WorkflowProfile
 from core.watcher import SmartWatcher
 from ui.workflow_panel import WorkflowPanel
 from ui.pdf_operations import MergePanel, SplitPanel
 from ui.themes import ThemeManager
 from ui.components import FileDropZone
 from ui.notifications import NotificationManager
-from utils.config import ConfigManager
 from utils.context_menu import add_context_menu
 from utils.pdf_tools import extract_text_with_ocr
 from utils.security import is_safe_path, validate_file_magic

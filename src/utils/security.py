@@ -6,7 +6,7 @@ y que los archivos correspondan a sus extensiones declaradas.
 import os
 import sys
 import pathlib
-from typing import Tuple, Optional, Union
+from typing import Tuple, Union
 import logging
 
 logger = logging.getLogger(__name__)

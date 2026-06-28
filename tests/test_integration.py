@@ -1,6 +1,5 @@
-"""Tests de integración: flujo completo."""
+"""Tests de integracion: flujo completo."""
 import pytest
-from pathlib import Path
 from unittest.mock import Mock, patch
 import sys
 import os
@@ -9,7 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from core.controller import AppController
 from core.interfaces import (
     IConverter, IQueueManager, IConfigManager,
-    IWorkflowEngine, ConversionJob
+    IWorkflowEngine
 )
 from utils.platform_service import MockPlatformService
 

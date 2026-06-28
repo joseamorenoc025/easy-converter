@@ -1,6 +1,5 @@
 """Tests para PathManager."""
 import pytest
-from pathlib import Path
 from unittest.mock import Mock
 import sys
 import os

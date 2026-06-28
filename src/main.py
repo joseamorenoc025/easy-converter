@@ -10,7 +10,7 @@ def check_single_instance():
     """Verifica si ya hay una instancia corriendo. Retorna True si es la primera."""
     try:
         import ctypes
-        mutex = ctypes.windll.kernel32.CreateMutexW(None, False, MUTEX_NAME)
+        ctypes.windll.kernel32.CreateMutexW(None, False, MUTEX_NAME)
         last_error = ctypes.windll.kernel32.GetLastError()
 
         if last_error == 183:  # ERROR_ALREADY_EXISTS
@@ -42,11 +42,11 @@ def _focus_existing_window():
     except Exception:
         pass
 
-from ui.main_window import App
-from utils.config import ConfigManager
-from core.error_handler import WordMissingError
-from utils.word_checker import WordChecker
-from tkinter import messagebox
+from ui.main_window import App  # noqa: E402
+from utils.config import ConfigManager  # noqa: E402
+from core.error_handler import WordMissingError  # noqa: E402
+from utils.word_checker import WordChecker  # noqa: E402
+from tkinter import messagebox  # noqa: E402
 
 
 def _first_run_setup(parent):

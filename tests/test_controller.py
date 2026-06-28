@@ -1,8 +1,7 @@
 """
-Tests para el controlador de la aplicación (AppController).
-Verifica la inyección de dependencias y la lógica de negocio.
+Tests para el controlador de la aplicacion (AppController).
+Verifica la inyeccion de dependencias y la logica de negocio.
 """
-import os
 import pytest
 from pathlib import Path
 from unittest.mock import Mock

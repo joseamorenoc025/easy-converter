@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 from utils.config import get_data_dir
 
 class EasyConverterError(Exception):
