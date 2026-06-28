@@ -14,7 +14,7 @@ def get_metadata(pdf_path: str) -> Dict[str, Any]:
             "subject": metadata.get("subject", ""),
             "keywords": metadata.get("keywords", ""),
             "pages": len(doc),
-            "format": f"{doc.page_width(0):.0f}x{doc.page_height(0):.0f} pts" if len(doc) > 0 else "N/A",
+            "format": f"{doc[0].rect.width:.0f}x{doc[0].rect.height:.0f} pts" if len(doc) > 0 else "N/A",
             "encrypted": doc.is_encrypted,
         }
     finally:

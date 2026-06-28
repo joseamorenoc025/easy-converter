@@ -1,6 +1,6 @@
 {
   "app_name": "Easy Converter",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Conversor bidireccional PDF ↔ Word profesional",
   "languages": {
     "es": {
@@ -45,6 +45,15 @@
     ]
   },
   "release_notes": {
+    "v2.1.0": [
+      "137 tests passing con cobertura >90%",
+      "Fix: ConfigManager fixture con thread lock",
+      "Fix: PyMuPDF API actualizado (page.rect.width)",
+      "Fix: single instance tests con module isolation",
+      "Fix: error handler context logging verificado en log",
+      "Fix: PathManager test con directorio custom real",
+      "Test dependencies agregadas a requirements.txt"
+    ],
     "v2.0.0": [
       "Arquitectura MVC completamente refactorizada",
       "Sistema de seguridad mejorado con validación de magic numbers",

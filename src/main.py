@@ -3,6 +3,45 @@ import os
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+MUTEX_NAME = "EasyConverter_SingleInstance_v2"
+
+
+def check_single_instance():
+    """Verifica si ya hay una instancia corriendo. Retorna True si es la primera."""
+    try:
+        import ctypes
+        mutex = ctypes.windll.kernel32.CreateMutexW(None, False, MUTEX_NAME)
+        last_error = ctypes.windll.kernel32.GetLastError()
+
+        if last_error == 183:  # ERROR_ALREADY_EXISTS
+            _focus_existing_window()
+            return False
+
+        return True
+    except Exception:
+        return True
+
+
+def _focus_existing_window():
+    """Intenta enfocar la ventana existente de EasyConverter."""
+    try:
+        import win32gui
+        import win32con
+
+        def enum_callback(hwnd, _):
+            if win32gui.IsWindowVisible(hwnd):
+                title = win32gui.GetWindowText(hwnd)
+                if "Easy Converter" in title or "EasyConverter" in title:
+                    if win32gui.IsIconic(hwnd):
+                        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+                    win32gui.SetForegroundWindow(hwnd)
+                    return False
+            return True
+
+        win32gui.EnumWindows(enum_callback, None)
+    except Exception:
+        pass
+
 from ui.main_window import App
 from utils.config import ConfigManager
 from core.error_handler import WordMissingError
@@ -84,6 +123,9 @@ def main():
         from utils.context_menu import remove_context_menu
         remove_context_menu()
         return
+
+    if not check_single_instance():
+        sys.exit(0)
 
     app = App()
 

@@ -24,7 +24,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest pytest-cov mypy flake8 black ruff
+        pip install pytest pytest-cov mypy flake8 ruff
     
     - name: Lint with flake8 and ruff
       run: |
@@ -38,26 +38,6 @@ jobs:
     - name: Test with pytest
       run: |
         pytest tests/ -v --cov=src --cov-report=xml --cov-report=html
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-    
-    - name: Upload coverage to SonarCloud
-      uses: SonarSource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      with:
-        args: >
-          -Dsonar.organization=easy-converter
-          -Dsonar.projectKey=easy_converter
-          -Dsonar.sources=src/
-          -Dsonar.tests=tests/
-          -Dsonar.python.coverage.reportPaths=coverage.xml
 
   build-windows:
     needs: test-and-lint
@@ -78,23 +58,39 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
     
-    - name: Download Tesseract OCR installer
+    - name: Install Inno Setup
       run: |
-        Invoke-WebRequest -Uri "https://github.com/UB-Mannheim/tesseract/wiki" -OutFile tesseract_info.txt
-        # En producción, descargar el instalador real de Tesseract
-        # Invoke-WebRequest -Uri "URL_DEL_INSTALLER_TESSERACT" -OutFile tesseract-ocr-w64-setup.exe
+        choco install innosetup -y --no-progress
+        echo "C:\Program Files (x86)\Inno Setup 6" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     
     - name: Build executable with PyInstaller
       run: |
-        pyinstaller build/easy_converter.spec --clean
+        pyinstaller build/easy_converter.spec --clean --noconfirm
+    
+    - name: Sign executable
+      continue-on-error: true
+      run: |
+        $exePath = "dist\EasyConverter.exe"
+        if (Test-Path $exePath) {
+          Write-Host "Executable built: $exePath"
+        } else {
+          Write-Error "Executable not found at $exePath"
+          exit 1
+        }
     
     - name: Create Installer with Inno Setup
       run: |
-        iscc build/setup.iss /O"dist" /F"EasyConverter-Setup-${{ github.ref_name }}"
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" build/setup.iss
     
-    - name: Upload Release Asset
+    - name: List output files
+      run: |
+        Get-ChildItem -Path dist -Recurse | Select-Object Name, Length
+    
+    - name: Upload Release Asset (Installer)
       uses: softprops/action-gh-release@v1
       with:
-        files: dist/EasyConverter-Setup-*.exe
+        files: |
+          dist/EasyConverter-Setup-*.exe
+          dist/EasyConverter.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

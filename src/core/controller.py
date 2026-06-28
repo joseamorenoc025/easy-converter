@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional, Dict, List
 from dataclasses import dataclass
 
-from src.core.interfaces import (
+from core.interfaces import (
     IConverter,
     IQueueManager,
     IConfigManager,
@@ -19,7 +19,7 @@ from src.core.interfaces import (
     ConversionJob,
     ConversionStatus,
 )
-from src.utils.security import is_safe_path, validate_file_magic
+from utils.security import is_safe_path, validate_file_magic
 
 
 @dataclass

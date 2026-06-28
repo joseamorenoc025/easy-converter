@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from appdirs import user_log_dir
+from utils.config import get_data_dir
 
 class EasyConverterError(Exception):
     """Clase base para excepciones de Easy Converter"""
@@ -26,7 +26,7 @@ class ConversionTimeoutError(EasyConverterError):
 
 class ErrorHandler:
     def __init__(self, app_name="EasyConverter"):
-        self.log_dir = Path(user_log_dir(app_name, "GeminiCLI"))
+        self.log_dir = get_data_dir(app_name)
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.log_file = self.log_dir / "error.log"
         self._setup_logger()

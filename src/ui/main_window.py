@@ -4,6 +4,13 @@ from tkinterdnd2 import TkinterDnD
 from PIL import Image
 import fitz
 from core.converter import EasyConverter
+from core.controller import AppController
+from core.converter_adapter import ConverterAdapter
+from core.queue_adapter import QueueAdapter
+from core.config_adapter import ConfigAdapter
+from core.workflow_adapter import WorkflowAdapter
+from core.platform_adapter import PlatformAdapter
+from core.view_adapter import ViewAdapter
 from core.error_handler import ErrorHandler
 from core.progress import ConversionProgress
 from core.queue_manager import ConversionQueue, QueueItem
@@ -37,16 +44,29 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self._set_app_icon()
 
         # Inicializar Componentes Core
-        self.config_manager = ConfigManager()
-        ThemeManager.apply(self.config_manager.get("theme", "dark"))
-        self.path_manager = PathManager(self.config_manager)
+        self.config_adapter = ConfigAdapter()
+        ThemeManager.apply(self.config_adapter.get("theme", "dark"))
+        self.path_manager = PathManager(self.config_adapter._config)
         self.error_handler = ErrorHandler()
-        self.workflow_manager = WorkflowManager(self.config_manager)
         self.watcher = SmartWatcher(callback=self.on_file_detected)
-        self.queue_manager = ConversionQueue(
-            worker_func=self.process_item,
-            on_queue_update=self.update_queue_ui
+
+        # Crear controller con inyección de dependencias
+        converter = ConverterAdapter()
+        queue = QueueAdapter()
+        queue.set_converter(converter)
+        self.controller = AppController(
+            converter=converter,
+            queue_manager=queue,
+            config_manager=self.config_adapter,
+            workflow_engine=WorkflowAdapter(self.config_adapter._config),
+            platform_service=PlatformAdapter(),
+            view_callback=ViewAdapter(self),
         )
+        self.queue_manager = self.controller._queue_manager._queue
+
+        # Alias para compatibilidad con el resto del archivo
+        self.config_manager = self.config_adapter._config
+        self.workflow_manager = self.controller._workflow_engine._manager
 
         # Notificaciones
         self.notifications = NotificationManager(master=self)

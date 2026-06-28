@@ -1,129 +1,119 @@
-# 🚀 Inicio Rápido - Easy Converter v2.0.0
+# Inicio Rapido - Easy Converter v2.1.0
 
-## Opción 1: Probar desde Código Fuente (Recomendado para Desarrollo)
+## Opcion 1: Instalador (Recomendado para Usuarios Finales)
+
+### Descarga
+1. Ve a [Releases](https://github.com/joseamorenoc025/easy-converter/releases/tag/v2.1.0)
+2. Descarga `EasyConverter-Setup-2.1.0.exe`
+
+### Instalacion
+1. Ejecuta el instalador
+2. Sigue el asistente
+3. Marca "Instalar Tesseract OCR" si trabajas con PDFs escaneados
+4. Marca "Agregar al menu contextual" para acceso rapido
+5. Finaliza la instalacion — la app se iniciara automaticamente
+
+---
+
+## Opcion 2: Portable (USB / Sin Instalar)
+
+### Descarga
+1. Ve a [Releases](https://github.com/joseamorenoc025/easy-converter/releases/tag/v2.1.0)
+2. Descarga `EasyConverter.exe`
+3. Copia el `.exe` a tu USB o carpeta preferida
+4. Ejecuta directamente — no requiere instalacion
+
+### Nota sobre Portabilidad
+- La configuracion se guarda junto al `.exe` automaticamente
+- Funciona en cualquier PC con Windows 10/11
+- Microsoft Word debe estar instalado para conversion Word a PDF
+- Tesseract OCR debe estar instalado separadamente si necesitas OCR
+
+---
+
+## Opcion 3: Codigo Fuente (Desarrolladores)
 
 ### Requisitos Previos
 - Python 3.9 o superior
 - pip (gestor de paquetes de Python)
-- Windows 10/11 (recomendado, algunas funciones son específicas de Windows)
+- Windows 10/11
 
-### Pasos de Instalación
+### Pasos
 
 ```bash
-# 1. Clonar el repositorio (si aún no lo has hecho)
-git clone https://github.com/TU_USUARIO/easy-converter.git
+# 1. Clonar repositorio
+git clone https://github.com/joseamorenoc025/easy-converter.git
 cd easy-converter
 
 # 2. Crear entorno virtual
 python -m venv venv
-
-# 3. Activar entorno virtual
-# En Windows:
 venv\Scripts\activate
-# En Linux/Mac:
-# source venv/bin/activate
 
-# 4. Instalar dependencias
+# 3. Instalar dependencias
 pip install -r requirements.txt
 
-# 5. Ejecutar la aplicación
+# 4. Ejecutar la aplicacion
 python src/main.py
 ```
 
-### Verificar que Todo Funciona
+### Ejecutar Tests
 
 ```bash
-# Ejecutar tests
+# Todos los tests
 pytest tests/ -v
 
-# Ver cobertura
-pytest tests/ --cov=src --cov-report=term-missing
+# Con cobertura
+pytest tests/ -v --cov=src --cov-report=term-missing
+```
 
-# Linting
-flake8 src/ tests/
+### Build del Ejecutable
 
-# Type checking
-mypy src/ --ignore-missing-imports
+```powershell
+# Generar ejecutable + instalador
+.\build\build.ps1
+
+# Solo ejecutable
+.\build\build.ps1 -SkipInstaller
 ```
 
 ---
 
-## Opción 2: Usar el Instalador (Usuario Final)
+## Pruebas Rapidas Post-Instalacion
 
-### Descarga
-1. Ve a [Releases](https://github.com/TU_USUARIO/easy-converter/releases)
-2. Descarga `EasyConverter-Setup-2.0.0.exe`
-
-### Instalación
-1. Ejecuta el instalador
-2. Sigue el asistente
-3. ✅ Marca "Instalar Tesseract OCR" si trabajas con PDFs escaneados
-4. ✅ Marca "Agregar al menú contextual" para acceso rápido
-5. Finaliza la instalación
-
-### Primer Uso
-1. La aplicación se iniciará automáticamente
-2. Completa el asistente de bienvenida
-3. ¡Listo para convertir!
-
----
-
-## 🧪 Pruebas Rápidas Post-Instalación
-
-### Test 1: Conversión Básica
+### Test 1: Conversion Basica
 1. Arrastra un archivo PDF a la ventana
 2. Selecciona "Convertir a Word"
-3. Click en "Iniciar Conversión"
+3. Click en "Iniciar Conversion"
 4. Verifica que el archivo .docx se crea correctamente
 
-### Test 2: Cambio de Idioma
-1. Ve a Preferencias ⚙️
-2. Cambia el idioma a Inglés
-3. Reinicia la aplicación
-4. Verifica que todos los textos están en inglés
+### Test 2: OCR
+1. Marca la casilla "OCR" en el panel lateral
+2. Arrastra un PDF escaneado
+3. Convierte — el texto de las imagenes se extraera
 
-### Test 3: Historial
-1. Realiza una conversión
-2. Ve a la pestaña "Historial"
-3. Verifica que la conversión aparece listada
-
-### Test 4: Deshacer
-1. Convierte un archivo
-2. Presiona `Ctrl+Z`
-3. Verifica que la operación se revierte
+### Test 3: Combinar PDFs
+1. Ve a "Herramientas PDF"
+2. Selecciona "Combinar"
+3. Agrega multiples PDFs
+4. Ejecuta — se genera un solo archivo
 
 ---
 
-## 🐛 Solución de Problemas Comunes
+## Solucion de Problemas
 
-### Error: "No module named 'customtkinter'"
+### "No module named 'customtkinter'"
 ```bash
-# Solución: Reinstalar dependencias
 pip install -r requirements.txt --force-reinstall
 ```
 
-### Error: "Word no está instalado"
-- La aplicación requiere Microsoft Word para conversión DOCX
-- Si no tienes Word, solo podrás convertir PDF → Word (no al revés)
-- Considera instalar LibreOffice como alternativa (requiere configuración adicional)
+### "Word no esta instalado"
+- La aplicacion requiere Microsoft Word para conversion DOCX a PDF
+- Sin Word, solo podras convertir PDF a Word
 
-### Error: "Tesseract no encontrado"
-- Descarga e instala Tesseract OCR: https://github.com/UB-Mannheim/tesseract/wiki
-- Añade la ruta de Tesseract a las variables de entorno PATH
-- O reinstala usando el instalador y marca la opción de Tesseract
+### "Tesseract no encontrado"
+- Descarga Tesseract OCR: https://github.com/UB-Mannheim/tesseract/wiki
+- O reinstala con el instalador y marca la opcion de Tesseract
 
-### Error: "Permission denied" en registro de Windows
-- Ejecuta la aplicación como Administrador
-- O desmarca la opción "Agregar al menú contextual" en Preferencias
-
----
-
-## 📚 Siguientes Pasos
-
-- Lee la [Guía de Usuario](docs/USER_GUIDE.md) para funcionalidades avanzadas
-- Consulta la [Arquitectura](docs/ARCHITECTURE.md) si eres desarrollador
-- Reporta bugs en [Issues](https://github.com/TU_USUARIO/easy-converter/issues)
-
----
-
-**¡Disfruta convirtiendo!** 🎉
+### La app no inicia
+- Verifica que Python 3.9+ este instalado: `python --version`
+- Reinstala dependencias: `pip install -r requirements.txt`

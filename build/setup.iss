@@ -2,7 +2,7 @@
 ; Requiere Inno Setup 6+ (https://jrsoftware.org/isdl.php)
 
 #define MyAppName "Easy Converter"
-#define MyAppVersion "2.0.0"
+#define MyAppVersion "2.1.0"
 #define MyAppPublisher "EasyConverter"
 #define MyAppURL "https://github.com/joseamorenoc025/easy-converter"
 #define MyAppExeName "EasyConverter.exe"

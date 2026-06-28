@@ -7,8 +7,8 @@ import pytest
 from pathlib import Path
 from unittest.mock import Mock
 
-from src.core.controller import AppController
-from src.core.interfaces import (
+from core.controller import AppController
+from core.interfaces import (
     IConverter,
     IQueueManager,
     IConfigManager,
@@ -17,7 +17,7 @@ from src.core.interfaces import (
     ConversionJob,
     ConversionStatus,
 )
-from src.utils.platform_service import MockPlatformService
+from utils.platform_service import MockPlatformService
 
 
 @pytest.fixture

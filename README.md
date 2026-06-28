@@ -1,56 +1,139 @@
-# Easy Converter 📄↔️📝
+# Easy Converter
 
-Un conversor de escritorio inteligente y bidireccional entre **PDF** y **Word (DOCX)**. Ahora no solo convierte archivos, sino que gestiona tu flujo de trabajo de forma automatizada.
+Conversor de escritorio bidireccional entre **PDF** y **Word (DOCX)** con flujo de trabajo automatizado.
 
-## ✨ Características
-- **Conversión de Alta Calidad:** Mantiene tablas, imágenes y párrafos con precisión.
-- **Flujos de Trabajo Inteligentes (¡NUEVO!):** Define perfiles con reglas de post-procesamiento.
-- **Carpetas Inteligentes (¡NUEVO!):** Monitoreo automático de carpetas para conversión desatendida.
-- **Reglas Automatizadas:** Renombrado automático (con fechas/patrones), mover o copiar archivos tras la conversión.
-- **Interfaz Moderna:** Pestañas separadas para control manual y gestión de flujos (basada en `customtkinter`).
-- **Arrastrar y Soltar:** Soporte nativo para `Drag & Drop`.
-- **Procesamiento en Segundo Plano:** Multihilo para no bloquear la interfaz.
+## Caracteristicas
 
-## 🛠️ Requisitos
-- **Python 3.10** o superior.
-- **Microsoft Word** instalado (obligatorio para Word a PDF en Windows).
+- **Conversion PDF a Word y Word a PDF** — mantiene tablas, imagenes y formato
+- **OCR con Tesseract** — extrae texto de PDFs escaneados (opcional)
+- **Combinar y dividir PDFs** — merge de multiples archivos o split por paginas/rangos
+- **Flujos de trabajo inteligentes** — perfiles con reglas de renombrado, mover, copiar
+- **Carpetas monitorizadas** — conversion automatica al copiar archivos a una carpeta
+- **Interfaz moderna** — customtkinter con drag & drop, temas oscuro/claro/alto contraste
+- **Notificaciones nativas** — alertas de Windows al completar conversiones
+- **Instalador con Tesseract** — Inno Setup incluye OCR como componente opcional
+- **Modo portable** — ejecutable unico funciona desde USB sin instalacion
 
-## 🚀 Instalación
+## Requisitos
 
-1. Clona el repositorio.
-2. Abre una terminal en la carpeta del proyecto.
-3. Instala las dependencias:
-   ```bash
-   pip install -r requirements.txt
-   ```
+- **Windows 10/11**
+- **Python 3.9+** (solo para ejecutar desde codigo fuente)
+- **Microsoft Word** (obligatorio para Word a PDF)
+- **Tesseract OCR** (opcional, para PDFs escaneados — se incluye en el instalador)
 
-## 📖 Uso
+## Instalacion
 
-Ejecuta el script principal:
+### Opcion 1: Instalador (Usuario Final)
+
+1. Descarga `EasyConverter-Setup-2.1.0.exe` desde [Releases](https://github.com/joseamorenoc025/easy-converter/releases/tag/v2.1.0)
+2. Ejecuta el instalador
+3. Marca "Instalar Tesseract OCR" si trabajas con PDFs escaneados
+4. Marca "Agregar al menú contextual" para acceso rapido desde el explorador
+
+### Opcion 2: Portable (USB / Sin Instalar)
+
+1. Descarga `EasyConverter.exe` desde [Releases](https://github.com/joseamorenoc025/easy-converter/releases/tag/v2.1.0)
+2. Copia el `.exe` a tu USB o carpeta preferida
+3. Ejecuta directamente — la configuracion se guarda junto al executable
+
+### Opcion 3: Codigo Fuente (Desarrolladores)
+
 ```bash
+git clone https://github.com/joseamorenoc025/easy-converter.git
+cd easy-converter
+pip install -r requirements.txt
 python src/main.py
 ```
 
-### Gestión de Flujos:
-1. Ve a la pestaña **"Flujos de Trabajo"**.
-2. Crea un **"Nuevo Perfil"** y elige una carpeta para monitorear.
-3. Activa el interruptor **"Monitorear"**.
-4. ¡Cualquier archivo compatible que copies a esa carpeta se convertirá y procesará automáticamente!
+## Uso
 
-## 📦 Bibliotecas Principales
-- [pdf2docx](https://github.com/ArtifexSoftware/pdf2docx): PDF a DOCX.
-- [docx2pdf](https://github.com/AlJohri/docx2pdf): DOCX a PDF.
-- [watchdog](https://github.com/gorakhargosh/watchdog): Monitoreo de carpetas en tiempo real.
-- [customtkinter](https://github.com/TomSchimansky/CustomTkinter): Interfaz gráfica.
+### Conversion Basica
+1. Arrastra un archivo PDF o DOCX a la ventana
+2. Selecciona la direccion de conversion (PDF a Word o Word a PDF)
+3. Haz clic en "Iniciar Conversion"
 
-## 📁 Estructura del Proyecto
-- `src/`: Código fuente de la aplicación.
-  - `core/`: Lógica de conversión, flujos y monitoreo.
-  - `ui/`: Interfaz gráfica y componentes.
-  - `utils/`: Utilidades de configuración y herramientas PDF/Word.
-- `assets/`: Recursos visuales e iconos.
-- `build/`: Configuraciones de compilación y hooks de PyInstaller.
-- `tests/`: Pruebas unitarias y de integración.
+### OCR (PDFs Escaneados)
+1. Marca la casilla "OCR" en el panel lateral
+2. Selecciona el idioma del documento
+3. Arrastra el PDF escaneado y conviertelo — el texto se extraera automaticamente
+
+### Combinar PDFs
+1. Ve a la pestana "Herramientas PDF"
+2. Selecciona "Combinar" y agrega los archivos PDF
+3. Elige la ruta de salida y ejecuta
+
+### Dividir PDFs
+1. Ve a la pestana "Herramientas PDF"
+2. Selecciona "Dividir" y configura paginas por archivo o rangos
+3. Ejecuta — se generan los archivos separados
+
+### Flujos de Trabajo
+1. Ve a la pestana "Flujos de Trabajo"
+2. Crea un perfil y selecciona una carpeta para monitorear
+3. Activa "Monitorear" — cualquier archivo compatible se convertira automaticamente
+
+## Estructura del Proyecto
+
+```
+src/
+  main.py              — Punto de entrada, single instance lock
+  core/
+    controller.py      — AppController con inyeccion de dependencias
+    interfaces.py      — Contratos abstractos (IConverter, IQueueManager, etc.)
+    converter.py       — Motor de conversion PDF/Word
+    converter_adapter.py — Adaptador IConverter -> EasyConverter
+    queue_manager.py   — Cola de procesamiento con Worker
+    queue_adapter.py   — Adaptador IQueueManager -> ConversionQueue
+    workflow.py        — Perfiles y reglas de post-procesamiento
+    workflow_adapter.py — Adaptador IWorkflowEngine -> WorkflowManager
+    file_manager.py    — Resolucion de rutas de salida
+    error_handler.py   — Manejo de errores con logging
+    watcher.py         — Monitoreo de carpetas con watchdog
+    progress.py        — Barra de progreso
+  ui/
+    main_window.py     — Ventana principal con customtkinter
+    components.py      — Componentes UI reutilizables
+    themes.py          — Temas oscuro/claro/alto contraste
+    notifications.py   — Notificaciones nativas de Windows
+    workflow_panel.py  — Panel de flujos de trabajo
+    pdf_operations.py  — Panel de operaciones PDF (merge/split)
+  utils/
+    config.py          — Persistencia de configuracion (portable + appdirs)
+    security.py        — Validacion de rutas y magic numbers
+    platform_service.py — Servicios de plataforma Windows
+    pdf_tools.py       — Metadatos, merge, split de PDFs con PyMuPDF
+    word_checker.py    — Deteccion de Microsoft Word
+    context_menu.py    — Registro de menu contextual de Windows
+build/
+  easy_converter.spec  — Configuracion PyInstaller (onefile)
+  setup.iss            — Script Inno Setup para instalador
+  build.ps1            — Script de automatizacion de build
+  cert.pfx             — Certificado autofirmado para firma de codigo
+tests/                 — 137 tests unitarios y de integracion
+```
+
+## Ejecutar Tests
+
+```bash
+pytest tests/ -v --cov=src
+```
+
+## Build
+
+```powershell
+# Generar ejecutable + instalador
+.\build\build.ps1
+
+# Solo ejecutable (sin instalador)
+.\build\build.ps1 -SkipInstaller
+
+# Sin firma de codigo
+.\build\build.ps1 -SkipSign
+```
+
+## Licencia
+
+MIT License — ver [LICENSE](LICENSE) para detalles.
 
 ---
-*Desarrollado con ❤️ por Gemini CLI*
+*Desarrollado por joseamorenoc025*

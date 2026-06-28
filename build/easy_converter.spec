@@ -49,8 +49,8 @@ datas += collect_data_files('customtkinter')
 
 version_info = VSVersionInfo(
     ffi=FixedFileInfo(
-        filevers=(2, 0, 0, 0),
-        prodvers=(2, 0, 0, 0),
+        filevers=(2, 1, 0, 0),
+        prodvers=(2, 1, 0, 0),
         mask=0x3F,
         flags=0,
         OS=0x40004,
@@ -65,12 +65,12 @@ version_info = VSVersionInfo(
                 kids=[
                     StringStruct('CompanyName', 'EasyConverter'),
                     StringStruct('FileDescription', 'Conversor bidireccional PDF a Word'),
-                    StringStruct('FileVersion', '2.0.0.0'),
+                    StringStruct('FileVersion', '2.1.0.0'),
                     StringStruct('InternalName', 'EasyConverter'),
                     StringStruct('LegalCopyright', '2026 EasyConverter'),
                     StringStruct('OriginalFilename', 'EasyConverter.exe'),
                     StringStruct('ProductName', 'Easy Converter'),
-                    StringStruct('ProductVersion', '2.0.0.0'),
+                    StringStruct('ProductVersion', '2.1.0.0'),
                 ]
             )
         ]),

@@ -7,7 +7,7 @@ import importlib.util
 from pathlib import Path
 from typing import Optional, Tuple
 
-from src.core.interfaces import IPlatformService
+from core.interfaces import IPlatformService
 
 
 class WindowsPlatformService(IPlatformService):
