@@ -424,8 +424,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             mode = 'word2pdf'
 
         if mode:
-            use_ocr = (mode == "pdf2word" and self.check_ocr.get())
-            success, message = self.queue_manager.add_item(path, mode, use_ocr=use_ocr)
+            success, message, _ = self.controller.queue_conversion(path, mode)
             if not success:
                 self.notifications.error("Error en cola", f"No se pudo a\u00f1adir: {message}")
 
