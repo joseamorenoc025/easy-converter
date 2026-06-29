@@ -6,10 +6,11 @@ Conversor de escritorio bidireccional entre **PDF** y **Word (DOCX)** con flujo 
 
 - **Conversion PDF a Word y Word a PDF** — mantiene tablas, imagenes y formato
 - **OCR con Tesseract** — extrae texto de PDFs escaneados (opcional)
-- **Combinar y dividir PDFs** — merge de multiples archivos o split por paginas/rangos
+- **Combinar, dividir, comprimir y cifrar PDFs** — merge, split, compresion y proteccion con contrasena
+- **Sanitizacion de PDFs** — elimina scripts JavaScript, formularios y metadatos peligrosos
 - **Flujos de trabajo inteligentes** — perfiles con reglas de renombrado, mover, copiar
 - **Carpetas monitorizadas** — conversion automatica al copiar archivos a una carpeta
-- **Interfaz moderna** — customtkinter con drag & drop, temas oscuro/claro/alto contraste
+- **Interfaz moderna** — customtkinter con drag & drop, temas personalizables
 - **Notificaciones nativas** — alertas de Windows al completar conversiones
 - **Instalador con Tesseract** — Inno Setup incluye OCR como componente opcional
 - **Modo portable** — ejecutable unico funciona desde USB sin instalacion
@@ -25,14 +26,14 @@ Conversor de escritorio bidireccional entre **PDF** y **Word (DOCX)** con flujo 
 
 ### Opcion 1: Instalador (Usuario Final)
 
-1. Descarga `EasyConverter-Setup-2.1.0.exe` desde [Releases](https://github.com/joseamorenoc025/easy-converter/releases/tag/v2.1.0)
+1. Descarga `EasyConverter-Installer-2.2.0.exe` desde [Releases](https://github.com/joseamorenoc025/easy-converter/releases/tag/v2.2.0)
 2. Ejecuta el instalador
 3. Marca "Instalar Tesseract OCR" si trabajas con PDFs escaneados
-4. Marca "Agregar al menú contextual" para acceso rapido desde el explorador
+4. Marca "Agregar al menu contextual" para acceso rapido desde el explorador
 
 ### Opcion 2: Portable (USB / Sin Instalar)
 
-1. Descarga `EasyConverter.exe` desde [Releases](https://github.com/joseamorenoc025/easy-converter/releases/tag/v2.1.0)
+1. Descarga `Easy Converter Portable.exe` desde [Releases](https://github.com/joseamorenoc025/easy-converter/releases/tag/v2.2.0)
 2. Copia el `.exe` a tu USB o carpeta preferida
 3. Ejecuta directamente — la configuracion se guarda junto al executable
 
@@ -58,17 +59,29 @@ python src/main.py
 3. Arrastra el PDF escaneado y conviertelo — el texto se extraera automaticamente
 
 ### Combinar PDFs
-1. Ve a la pestana "Herramientas PDF"
+1. Ve a la pestana "Herramientas"
 2. Selecciona "Combinar" y agrega los archivos PDF
 3. Elige la ruta de salida y ejecuta
 
 ### Dividir PDFs
-1. Ve a la pestana "Herramientas PDF"
+1. Ve a la pestana "Herramientas"
 2. Selecciona "Dividir" y configura paginas por archivo o rangos
 3. Ejecuta — se generan los archivos separados
 
+### Cifrar PDF
+1. Ve a la pestana "Herramientas"
+2. Selecciona "Cifrar" y carga el PDF
+3. Configura contrasena, nivel de cifrado (AES-256/128) y permisos
+4. Ejecuta — el PDF queda protegido
+
+### Sanitizar PDF
+1. Ve a la pestana "Herramientas"
+2. Selecciona "Sanitizar" y carga el PDF
+3. Marca las opciones (scripts, formularios, metadatos)
+4. Ejecuta — se elimina el contenido peligroso
+
 ### Flujos de Trabajo
-1. Ve a la pestana "Flujos de Trabajo"
+1. Ve a la pestana "Flujos"
 2. Crea un perfil y selecciona una carpeta para monitorear
 3. Activa "Monitorear" — cualquier archivo compatible se convertira automaticamente
 
@@ -93,15 +106,15 @@ src/
   ui/
     main_window.py     — Ventana principal con customtkinter
     components.py      — Componentes UI reutilizables
-    themes.py          — Temas oscuro/claro/alto contraste
+    themes.py          — Temas oscuro/claro/alto contraste + personalizables
     notifications.py   — Notificaciones nativas de Windows
     workflow_panel.py  — Panel de flujos de trabajo
-    pdf_operations.py  — Panel de operaciones PDF (merge/split)
+    pdf_operations.py  — Panel de operaciones PDF (merge/split/cifrar/sanitizar)
   utils/
     config.py          — Persistencia de configuracion (portable + appdirs)
     security.py        — Validacion de rutas y magic numbers
     platform_service.py — Servicios de plataforma Windows
-    pdf_tools.py       — Metadatos, merge, split de PDFs con PyMuPDF
+    pdf_tools.py       — Metadatos, merge, split, cifrar, sanitizar PDFs
     word_checker.py    — Deteccion de Microsoft Word
     context_menu.py    — Registro de menu contextual de Windows
 build/
@@ -109,7 +122,7 @@ build/
   setup.iss            — Script Inno Setup para instalador
   build.ps1            — Script de automatizacion de build
   cert.pfx             — Certificado autofirmado para firma de codigo
-tests/                 — 137 tests unitarios y de integracion
+tests/                 — 183 tests unitarios y de integracion
 ```
 
 ## Ejecutar Tests
