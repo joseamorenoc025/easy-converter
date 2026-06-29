@@ -7,7 +7,10 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-from utils.pdf_tools import get_metadata, get_page_count, merge_pdfs, split_pdf
+from utils.pdf_tools import (
+    get_metadata, get_page_count, merge_pdfs, split_pdf,
+    compress_pdf, sanitize_pdf, decrypt_pdf, get_pdf_info,
+)
 
 
 @pytest.fixture
@@ -82,3 +85,94 @@ class TestPdfTools:
         output = tmp_path / "merged.pdf"
         result = merge_pdfs([str(sample_pdf)], str(output))
         assert Path(result).exists()
+
+
+class TestCompressPdf:
+    def test_compress_medium(self, sample_pdf, tmp_path):
+        output = tmp_path / "compressed.pdf"
+        result = compress_pdf(str(sample_pdf), str(output), quality="medium")
+        assert result["success"] is True
+        assert Path(output).exists()
+        assert result["original_size"] > 0
+        assert result["compressed_size"] > 0
+
+    def test_compress_low(self, sample_pdf, tmp_path):
+        output = tmp_path / "compressed_low.pdf"
+        result = compress_pdf(str(sample_pdf), str(output), quality="low")
+        assert result["success"] is True
+        assert result["ratio"] >= 0
+
+    def test_compress_high(self, sample_pdf, tmp_path):
+        output = tmp_path / "compressed_high.pdf"
+        result = compress_pdf(str(sample_pdf), str(output), quality="high")
+        assert result["success"] is True
+
+    def test_compress_invalid_quality_falls_back(self, sample_pdf, tmp_path):
+        output = tmp_path / "compressed_fallback.pdf"
+        result = compress_pdf(str(sample_pdf), str(output), quality="invalid")
+        assert result["success"] is True
+
+
+class TestSanitizePdf:
+    def test_sanitize_basic(self, sample_pdf, tmp_path):
+        output = tmp_path / "sanitized.pdf"
+        result = sanitize_pdf(str(sample_pdf), str(output))
+        assert result["success"] is True
+        assert Path(output).exists()
+        assert result["original_size"] > 0
+
+    def test_sanitize_remove_metadata(self, sample_pdf, tmp_path):
+        output = tmp_path / "sanitized_meta.pdf"
+        result = sanitize_pdf(str(sample_pdf), str(output), remove_metadata=True)
+        assert result["success"] is True
+        assert result["items_removed"] >= 1
+
+    def test_sanitize_no_forms(self, sample_pdf, tmp_path):
+        output = tmp_path / "sanitized_noforms.pdf"
+        result = sanitize_pdf(str(sample_pdf), str(output), remove_forms=False)
+        assert result["success"] is True
+
+
+class TestDecryptPdf:
+    def test_decrypt_non_encrypted(self, sample_pdf, tmp_path):
+        output = tmp_path / "decrypted.pdf"
+        result = decrypt_pdf(str(sample_pdf), str(output), password="any")
+        assert result["success"] is True
+        assert result["was_encrypted"] is False
+
+    def test_decrypt_wrong_password(self, sample_pdf, tmp_path):
+        doc = fitz.open()
+        doc.new_page()
+        encrypted_path = tmp_path / "encrypted.pdf"
+        doc.save(str(encrypted_path), encryption=fitz.PDF_ENCRYPT_AES_128,
+                 user_pw="secret", owner_pw="secret")
+        doc.close()
+        output = tmp_path / "decrypted.pdf"
+        result = decrypt_pdf(str(encrypted_path), str(output), password="wrong")
+        assert result["success"] is False
+        assert result["was_encrypted"] is True
+
+    def test_decrypt_correct_password(self, sample_pdf, tmp_path):
+        doc = fitz.open(str(sample_pdf))
+        encrypted_path = tmp_path / "encrypted.pdf"
+        doc.save(str(encrypted_path), encryption=fitz.PDF_ENCRYPT_AES_128,
+                 user_pw="secret", owner_pw="secret")
+        doc.close()
+        output = tmp_path / "decrypted.pdf"
+        result = decrypt_pdf(str(encrypted_path), str(output), password="secret")
+        assert result["success"] is True
+        assert result["was_encrypted"] is True
+        assert result["pages"] == 1
+
+
+class TestGetPdfInfo:
+    def test_info_basic(self, sample_pdf):
+        info = get_pdf_info(str(sample_pdf))
+        assert info["pages"] == 1
+        assert info["encrypted"] is False
+        assert info["size_bytes"] > 0
+        assert info["size_mb"] >= 0
+
+    def test_info_multi_page(self, multi_pdf):
+        info = get_pdf_info(str(multi_pdf))
+        assert info["pages"] == 3

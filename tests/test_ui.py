@@ -62,5 +62,6 @@ class TestWidgets:
         assert hasattr(app, 'check_ocr')
 
     def test_mode_buttons_exist(self, app):
-        assert hasattr(app, 'btn_pdf2word')
-        assert hasattr(app, 'btn_word2pdf')
+        assert hasattr(app, 'mode_frame')
+        assert hasattr(app.mode_frame, 'btn_pdf2word')
+        assert hasattr(app.mode_frame, 'btn_word2pdf')

@@ -33,3 +33,4 @@ dist/
 build/easy_converter/
 build/tesseract-ocr-w64-setup-*.exe
 build/tess_*.txt
+easyconverter/

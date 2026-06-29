@@ -65,12 +65,12 @@ version_info = VSVersionInfo(
                 kids=[
                     StringStruct('CompanyName', 'EasyConverter'),
                     StringStruct('FileDescription', 'Conversor bidireccional PDF a Word'),
-                    StringStruct('FileVersion', '2.1.0.0'),
+                    StringStruct('FileVersion', '2.2.0.0'),
                     StringStruct('InternalName', 'EasyConverter'),
                     StringStruct('LegalCopyright', '2026 EasyConverter'),
                     StringStruct('OriginalFilename', 'EasyConverter.exe'),
                     StringStruct('ProductName', 'Easy Converter'),
-                    StringStruct('ProductVersion', '2.1.0.0'),
+                    StringStruct('ProductVersion', '2.2.0.0'),
                 ]
             )
         ]),

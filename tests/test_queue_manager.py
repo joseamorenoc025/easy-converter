@@ -61,8 +61,9 @@ class TestConversionQueue:
         queue = ConversionQueue(worker_func=worker)
         queue.add_item(Path("/test/file.pdf"), "pdf2word")
         time.sleep(0.3)
-        assert queue.items[0].status == "failed"
-        assert "Error de prueba" in queue.items[0].message
+        # With retries enabled, first failure goes to retry_pending
+        assert queue.items[0].status in ("failed", "retry_pending")
+        assert "Error de prueba" in queue.items[0].last_error
 
     def test_clear_completed_removes_success_and_failed(self):
         queue = ConversionQueue(worker_func=lambda x: None)

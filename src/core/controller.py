@@ -289,3 +289,54 @@ class AppController:
     def get_active_jobs(self) -> Dict[str, ConversionJob]:
         """Obtiene los trabajos activos."""
         return self._active_jobs.copy()
+
+    def batch_convert_folder(
+        self, folder_path: Path, conversion_type: str = "pdf2word", recursive: bool = False
+    ) -> tuple:
+        """
+        Convierte todos los archivos compatibles de una carpeta.
+
+        Args:
+            folder_path: Carpeta fuente.
+            conversion_type: 'pdf2word' o 'word2pdf'.
+            recursive: Si True, incluye subcarpetas.
+
+        Returns:
+            Tuple[bool, str, List[str]]: (éxito, mensaje, job_ids)
+        """
+        if not folder_path.is_dir():
+            return False, f"No es una carpeta válida: {folder_path}", []
+
+        if conversion_type == "pdf2word":
+            extensions = (".pdf",)
+        elif conversion_type == "word2pdf":
+            extensions = (".docx", ".doc")
+        else:
+            return False, f"Tipo de conversión desconocido: {conversion_type}", []
+
+        files = []
+        if recursive:
+            for ext in extensions:
+                files.extend(folder_path.rglob(f"*{ext}"))
+        else:
+            for ext in extensions:
+                files.extend(folder_path.glob(f"*{ext}"))
+
+        files = [f for f in files if f.is_file()]
+        if not files:
+            return False, "No se encontraron archivos compatibles", []
+
+        job_ids = []
+        queued = 0
+        failed = 0
+        for f in files:
+            success, msg, job_id = self.queue_conversion(f, conversion_type)
+            if success and job_id:
+                job_ids.append(job_id)
+                queued += 1
+            else:
+                failed += 1
+
+        summary = f"Encolados: {queued} | Fallidos: {failed} | Total: {len(files)}"
+        self._notify_success(f"Lote: {summary}")
+        return True, summary, job_ids
