@@ -111,10 +111,8 @@ class ProgressCard(customtkinter.CTkFrame):
             path = Path(self._result_path)
             try:
                 import os
-                if path.is_file():
-                    os.startfile(path.parent)
-                else:
-                    os.startfile(path)
+                if path.exists():
+                    os.startfile(str(path))
             except Exception:
                 pass
 

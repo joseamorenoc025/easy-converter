@@ -563,6 +563,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             if item.status != widgets['_last_status']:
                 if item.status == "success":
                     card.status_label.configure(text_color=ThemeManager.get_color("success"))
+                    card._result_path = item.result_path
                     card.open_btn.configure(state="normal")
                 elif item.status == "failed":
                     card.status_label.configure(text_color=ThemeManager.get_color("error"))
