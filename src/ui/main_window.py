@@ -75,6 +75,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             view_callback=ViewAdapter(self),
         )
         self.queue_manager = self.controller._queue_manager._queue
+        self.queue_manager.on_queue_update = self.update_queue_ui
         self.config_manager = self.config_adapter._config
         self.workflow_manager = self.controller._workflow_engine._manager
         self.notifications = NotificationManager(master=self)
@@ -213,7 +214,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.tabview.pack(fill="both", expand=True, pady=(8, 0))
         self.tabview.add("\U0001f4c4  Conversi\u00f3n")
         self.tabview.add("\U0001f6e0\ufe0f  Herramientas")
-        self.tabview.add("\U0001f504  Flujos")
+        self.tabview.add("\U0001f504  Carpeta Inteligente")
         self.tabview.add("\U0001f4e6  Lote")
 
         self._build_conversion_tab()
@@ -287,7 +288,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
             panel.pack(fill="both", expand=True)
 
     def _build_flows_tab(self):
-        tab = self.tabview.tab("\U0001f504  Flujos")
+        tab = self.tabview.tab("\U0001f504  Carpeta Inteligente")
         self.workflow_panel = WorkflowPanel(tab, self.workflow_manager,
                                            on_watcher_change=self.handle_watcher_change)
         self.workflow_panel.pack(fill="both", expand=True)
@@ -359,7 +360,7 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.tabview.pack(fill="both", expand=True, pady=(8, 0))
         self.tabview.add("\U0001f4c4  Conversi\u00f3n")
         self.tabview.add("\U0001f6e0\ufe0f  Herramientas")
-        self.tabview.add("\U0001f504  Flujos")
+        self.tabview.add("\U0001f504  Carpeta Inteligente")
         self.tabview.add("\U0001f4e6  Lote")
 
         self._build_conversion_tab()

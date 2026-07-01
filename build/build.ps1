@@ -65,7 +65,22 @@ if (-not $SkipSign) {
     }
 }
 
-# 4. Compilar instalador Inno Setup
+# 4. Extraer Tesseract OCR a carpeta portable
+$tesseractDir = Join-Path $buildDir "build\tesseract"
+if (-not (Test-Path "$tesseractDir\tesseract.exe")) {
+    Write-Step "Extrayendo Tesseract OCR a carpeta portable..."
+    $tesseractInstaller = Join-Path $buildDir "build\tesseract-ocr-w64-setup-5.5.0.20241111.exe"
+    if (Test-Path $tesseractInstaller) {
+        & $tesseractInstaller /VERYSILENT /DIR="$tesseractDir" /COMPONENTS="program,tessdata_eng,tessdata_spa" /NORESTART
+        Write-Host "  -> Tesseract extraido a $tesseractDir" -ForegroundColor Green
+    } else {
+        Write-Host "  -> Instalador de Tesseract no encontrado. Copia desde una instalacion existente." -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  -> Tesseract ya extraido en $tesseractDir" -ForegroundColor Green
+}
+
+# 5. Compilar instalador Inno Setup
 if (-not $SkipInstaller) {
     Write-Step "Compilando instalador Inno Setup..."
     $isccPaths = @(

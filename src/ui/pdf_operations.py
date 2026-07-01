@@ -6,6 +6,7 @@ from tkinter import messagebox
 from utils.pdf_tools import (
     merge_pdfs, split_pdf, get_page_count,
     compress_pdf, sanitize_pdf, decrypt_pdf, get_pdf_info,
+    encrypt_pdf,
 )
 from ui.themes import ThemeManager
 

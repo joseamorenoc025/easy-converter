@@ -18,7 +18,7 @@ class WorkflowPanel(customtkinter.CTkFrame):
         header.pack(fill="x", padx=20, pady=(12, 0))
         customtkinter.CTkLabel(header, text="\U0001f504",
                                font=customtkinter.CTkFont(size=20)).pack(side="left", padx=(0, 8))
-        customtkinter.CTkLabel(header, text="Flujos Inteligentes",
+        customtkinter.CTkLabel(header, text="Carpeta Inteligente",
                                font=customtkinter.CTkFont(size=16, weight="bold")).pack(side="left")
 
         customtkinter.CTkLabel(self, text="Configura perfiles para monitorear carpetas y convertir autom\u00e1ticamente",

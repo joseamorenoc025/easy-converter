@@ -211,7 +211,13 @@ def _first_run_setup(parent):
             import pytesseract
             from pathlib import Path
             from utils.platform_service import WindowsPlatformService
-            tesseract_path = WindowsPlatformService().get_tesseract_path()
+            ps = WindowsPlatformService()
+            tesseract_path = ps.get_tesseract_path()
+            if not tesseract_path:
+                app_dir = Path(__file__).parent.parent
+                portable = app_dir / "tesseract" / "tesseract.exe"
+                if portable.exists():
+                    tesseract_path = portable
             if tesseract_path:
                 pytesseract.pytesseract.tesseract_cmd = str(tesseract_path)
                 os.environ["TESSDATA_PREFIX"] = str(tesseract_path.parent)

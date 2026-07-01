@@ -40,12 +40,11 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon"; Description: "Crear acceso directo en el escritorio"; GroupDescription: "Accesos directos:"
 Name: "contextmenu"; Description: "Añadir opciones al menú contextual de Windows"; GroupDescription: "Integración:"
-Name: "tesseract"; Description: "Instalar Tesseract OCR (Inglés + Español)"; GroupDescription: "Componentes opcionales:"; Flags: checkedonce
 
 [Files]
 Source: "..\dist\EasyConverter.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "tesseract-ocr-w64-setup-5.5.0.20241111.exe"; DestDir: "{tmp}"; Flags: ignoreversion; Tasks: tesseract
+Source: "..\build\tesseract\*"; DestDir: "{app}\tesseract"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -80,7 +79,6 @@ Root: "HKCU"; Subkey: "Software\Classes\SystemFileAssociations\.doc\shell\EasyCo
 Root: "HKCU"; Subkey: "Software\Classes\SystemFileAssociations\.doc\shell\EasyConverter\command"; Tasks: contextmenu; ValueType: string; ValueData: """{app}\{#MyAppExeName}"" --word2pdf ""%1"""
 
 [Run]
-Filename: "{tmp}\tesseract-ocr-w64-setup-5.5.0.20241111.exe"; Parameters: "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /COMPONENTS=""program,tessdata_eng,tessdata_spa"""; StatusMsg: "Instalando Tesseract OCR (Inglés + Español)..."; Flags: waituntilterminated runhidden; Tasks: tesseract
 Filename: "{app}\{#MyAppExeName}"; Description: "Ejecutar {#MyAppName}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
