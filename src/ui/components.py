@@ -179,7 +179,6 @@ class ModeToggle(customtkinter.CTkFrame):
 
 class StatusBadge(customtkinter.CTkLabel):
     def __init__(self, master, text="", status="pending", **kwargs):
-        from ui.themes import ThemeManager
         super().__init__(master, text=text, font=customtkinter.CTkFont(size=11), **kwargs)
         self.set_status(status)
 

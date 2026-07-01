@@ -340,7 +340,6 @@ class App(customtkinter.CTk, TkinterDnD.DnDWrapper):
         self.config_manager.set("theme", theme_key)
 
         # Guardar estado
-        queue_items = self.queue_manager.get_all_items()
         out_mode = self.out_mode_var.get()
         ocr_val = self.check_ocr.get()
         open_val = self.check_open.get()
