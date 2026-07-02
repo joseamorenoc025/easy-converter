@@ -82,6 +82,7 @@ jobs:
       run: |
         if (-not (Test-Path "build\tesseract")) {
           New-Item -ItemType Directory -Path "build\tesseract" -Force
+          "" | Out-File -FilePath "build\tesseract\.placeholder" -Encoding utf8
         }
 
     - name: Create Installer with Inno Setup
