@@ -6,7 +6,7 @@ Implementa el patrón Controller para MVC.
 import time
 import uuid
 from pathlib import Path
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 from dataclasses import dataclass
 
 from core.interfaces import (
@@ -307,6 +307,7 @@ class AppController:
         if not folder_path.is_dir():
             return False, f"No es una carpeta válida: {folder_path}", []
 
+        extensions: Tuple[str, ...]
         if conversion_type == "pdf2word":
             extensions = (".pdf",)
         elif conversion_type == "word2pdf":
@@ -314,7 +315,7 @@ class AppController:
         else:
             return False, f"Tipo de conversión desconocido: {conversion_type}", []
 
-        files = []
+        files: List[Path] = []
         if recursive:
             for ext in extensions:
                 files.extend(folder_path.rglob(f"*{ext}"))
