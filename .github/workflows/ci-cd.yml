@@ -43,6 +43,8 @@ jobs:
     needs: test-and-lint
     runs-on: windows-latest
     if: github.event_name == 'release'
+    permissions:
+      contents: write
     
     steps:
     - uses: actions/checkout@v4
@@ -97,7 +99,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          dist/EasyConverter-Setup-*.exe
+          dist/EasyConverter-Installer-*.exe
           dist/EasyConverter.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
